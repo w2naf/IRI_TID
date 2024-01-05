@@ -25,7 +25,9 @@ import cartopy
 import cartopy.crs as ccrs
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 
-import pyiri2016
+#import pyiri2016
+import PyIRI
+import PyIRI.main_library as ml
 
 try:
     from . import geopack
@@ -122,30 +124,29 @@ class iono_3d(object):
         iri_rundcts = []
         edens_inxs  = []
         for dInx,date in tqdm.tqdm(enumerate(self.dates),desc='Prepping IRI Run Dictionaries',dynamic_ncols=True,total=len(self.dates)):
+            year    = date.year
+            month   = date.month
+            day     = date.day
             dhour   = date.hour + date.minute/60.
-            for latInx,lat in enumerate(self.lats):
-                for lonInx,lon in enumerate(self.lons):
-#                    tqdm.tqdm.write('iri: {!s} lat: {:0.2f} lon: {:0.2f}'.format(date,lat,lon))
-                    #  jmag    --> 0: geographic; 1: geomagnetic
-                    #  iut     --> 0: for lt;     1: for ut
-                    #  htecmax --> 0: no tec; otherwise: upper boundary for integral [km]
+            ahr     = np.array([dhour])
+            alat_2d, alon_2d = np.meshgrid(self.lats,self.lons)
+            alat    = np.reshape(alat_2d, alat_2d.size)
+            alon    = np.reshape(alon_2d, alon_2d.size)
+            aalt    = self.alts
+            f107    = 100
 
-                    dct = dict(altlim=[self.alts.min(),self.alts.max()],
-                            altstp=self.alt_step,lat=lat,lon=lon,
-                            year=date.year,month=date.month,dom=date.day,hour=dhour,
-                            jmag=0,iut=0,htecmax=0,verbose=False)
+            # Specify what coefficients to use for the peak of F2 layer:
+            # 0 = CCIR, 1 = URSI
+            ccir_or_ursi    = 0
 
-                    iri_rundcts.append(dct)
-                    edens_inxs.append((dInx,latInx,lonInx))
+            f2, f1, e_peak, es_peak, sun, mag, edp = ml.IRI_density_1day(year, month, day, 
+                    ahr, alon, alat, aalt, f107, PyIRI.coeff_dir, ccir_or_ursi)
 
-        results = []
-        for rInx,iri_rundct in tqdm.tqdm(enumerate(iri_rundcts),desc='Running IRI2016',dynamic_ncols=True,total=len(iri_rundcts)):
-            result = pyiri2016.IRI2016Profile(**iri_rundct)
-            results.append(result)
+            for alt_inx, alt in enumerate(self.alts):
+                edp_ll = np.reshape(edp[0,alt_inx,:],(nLats,nLons))
+                # edens[dinx,latinx,loninx,alt_inx]
+                edens[dInx,:,:,alt_inx]    = edp_ll
 
-        for rInx,result in enumerate(results):
-            dinx,latinx,loninx = edens_inxs[rInx]
-            edens[dinx,latinx,loninx,:]    = result.heiProfile['Ne']
         ################################################################################
 
         # Create XArray Dataset
