@@ -1,0 +1,6 @@
+matplotlib
+pyiri2016
+ipdb
+scipy
+numpy
+pandas
