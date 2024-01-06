@@ -409,6 +409,88 @@ class iono_3d(object):
             fig.savefig(_filename,bbox_inches='tight')
             plt.close()
 
+    def plot_maps_ortho(self,alt=250.,output_dir='output',figsize=(15,8),
+            xlim=None,ylim=None,plot_profile_paths='all'):
+        ds      = self.iri_dataset
+        edens   = ds['electron_density'].values
+        lats    = ds['lat'].values
+        lons    = ds['lon'].values
+        alts    = ds['alt'].values
+        dates   = list(map(pd.to_datetime,ds['date'].values))
+
+        alt_inx = np.argmin(np.abs(alts-alt))
+
+        scale,ticks,cmap = calculate_scale(edens[:,:,:,alt_inx])
+        bounds      = np.linspace(scale[0],scale[1],256)
+        norm        = matplotlib.colors.BoundaryNorm(bounds,cmap.N)
+
+        for dInx,date in tqdm.tqdm(enumerate(dates),desc='Plotting Maps',dynamic_ncols=True):
+            tqdm.tqdm.write('Plotting: {!s}'.format(date))
+            this_edens  = edens[dInx,:,:]
+
+            fig     = plt.figure(figsize=figsize)
+            ax      = fig.add_subplot(111,projection=ccrs.Orthographic(0,90))
+
+    #        ax.coastlines(zorder=10,color='k')
+    #        ax.add_feature(cartopy.feature.LAND)
+    #        ax.add_feature(cartopy.feature.OCEAN)
+    #        ax.add_feature(cartopy.feature.LAKES, alpha=0.5)
+    #        ax.add_feature(cartopy.feature.RIVERS)
+            ax.add_feature(cartopy.feature.COASTLINE)
+            ax.add_feature(cartopy.feature.BORDERS, linestyle=':')
+            ax.set_title('')
+            ax.gridlines(draw_labels=True)
+
+            LONS, LATS  = np.meshgrid(lons,lats)
+            data        = this_edens[:,:,alt_inx]
+            pcoll       = ax.pcolormesh(LONS,LATS,data,cmap=cmap,norm=norm,transform=ccrs.PlateCarree())
+
+            if plot_profile_paths == 'all':
+                for prof_key,profile in self.profiles.items():
+                    glons       = profile.attrs['glons']
+                    tf          = glons > 180
+                    glons[tf]   = glons[tf]-360.
+                    glats       = profile.attrs['glats']
+                    ax.plot(glons,glats,marker='o',color='k',lw=4,zorder=100,transform=ccrs.PlateCarree())
+
+                    tx_call     = profile.attrs['tx_call']
+                    tx_lat      = profile.attrs['tx_lat']
+                    tx_lon      = profile.attrs['tx_lon']
+                    if tx_lon > 180:
+                        tx_lon = tx_lon - 360.
+
+                    rx_call     = profile.attrs['rx_call']
+                    rx_lat      = profile.attrs['rx_lat']
+                    rx_lon      = profile.attrs['rx_lon']
+                    if rx_lon > 180:
+                        rx_lon = rx_lon - 360.
+
+                    ax.scatter(tx_lon,tx_lat,marker='*',s=450,zorder=110,label=tx_call,ec='k',fc='red',transform=ccrs.PlateCarree())
+                    ax.scatter(rx_lon,rx_lat,marker='*',s=450,zorder=110,label=rx_call,ec='k',fc='orange',transform=ccrs.PlateCarree())
+                    fontdict = {'size':'x-large','weight':'bold'}
+                    offset = 1.1
+                    ax.text(tx_lon,tx_lat+offset,tx_call,fontdict=fontdict,ha='center',transform=ccrs.PlateCarree())
+                    ax.text(rx_lon,rx_lat+offset,rx_call,fontdict=fontdict,ha='center',transform=ccrs.PlateCarree())
+
+#            ax.set_xlim(xlim)
+#            ax.set_ylim(ylim)
+
+            ax.set_extent([-180, 180, 1, 90], ccrs.PlateCarree())
+            cbar_label  = r'IRI Electron Density [m$^{-3}$]'
+            cbar        = fig.colorbar(pcoll,orientation='vertical',shrink=0.65,pad=0.075,ticks=ticks)
+            cbar.set_label(cbar_label,fontdict={'weight':'bold','size':'large'})
+
+            # Plot Title
+            txt = []
+            txt.append('{0} - Alt: {1:.0f} km'.format(date.strftime('%d %b %Y %H%M UT'),float(alts[alt_inx])))
+            ax.set_title('\n'.join(txt),fontdict={'weight':'bold','size':'xx-large'})
+
+            fname = '{0}_{1:03.0f}km_edens_map.png'.format(date.strftime('%Y%m%d_%H%MUT'),float(alts[alt_inx]))
+            _filename = os.path.join(output_dir,fname)
+
+            fig.savefig(_filename,bbox_inches='tight')
+            plt.close()
+
     def generate_wave(self,wave_list=None):
         """
         """
