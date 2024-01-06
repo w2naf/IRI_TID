@@ -30,6 +30,11 @@ kw_args['lon_1']    =  -70.0
 kw_args['lat_step'] =    1.00
 kw_args['lon_step'] =    1.00
 
+kw_args['lat_0']    =   -90.
+kw_args['lat_1']    =    90.
+kw_args['lon_0']    = -180.0
+kw_args['lon_1']    =  180.0
+
 iono = ionolib.iono_grid.iono_3d(**kw_args)
 wave_list = []
 #wave_list.append(dict(src_lat=40.679917,src_lon=-105.040944,amplitude=0.50,lambda_h=250,T_minutes=15))
@@ -57,13 +62,14 @@ prof_dct['rx_lon']  = rx_lon
 iono.generate_tx_rx_profile(**prof_dct)
 iono.plot_profiles(output_dir=profile_dir)
 
+## World
 #xlim    = (-180,180)
 #ylim    = (-90,90)
 
-# CONUS
-xlim    = (-130,-56)
-ylim    = (20,55)
-
+## CONUS
+#xlim    = (-130,-56)
+#ylim    = (20,55)
+#
 # CONUS + Canada
 xlim    = (-130,-56)
 ylim    = (20,80)

@@ -143,7 +143,7 @@ class iono_3d(object):
                     ahr, alon, alat, aalt, f107, PyIRI.coeff_dir, ccir_or_ursi)
 
             for alt_inx, alt in enumerate(self.alts):
-                edp_ll = np.reshape(edp[0,alt_inx,:],(nLats,nLons))
+                edp_ll = np.reshape(edp[0,alt_inx,:],(nLons,nLats)).T
                 # edens[dinx,latinx,loninx,alt_inx]
                 edens[dInx,:,:,alt_inx]    = edp_ll
 
