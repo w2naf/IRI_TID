@@ -472,6 +472,8 @@ class iono_3d(object):
                     ax.text(tx_lon,tx_lat+offset,tx_call,fontdict=fontdict,ha='center',transform=ccrs.PlateCarree())
                     ax.text(rx_lon,rx_lat+offset,rx_call,fontdict=fontdict,ha='center',transform=ccrs.PlateCarree())
 
+            import ipdb; ipdb.set_trace()
+
 #            ax.set_xlim(xlim)
 #            ax.set_ylim(ylim)
 
