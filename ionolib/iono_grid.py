@@ -391,6 +391,13 @@ class iono_3d(object):
                     ax.text(tx_lon,tx_lat+offset,tx_call,fontdict=fontdict,ha='center')
                     ax.text(rx_lon,rx_lat+offset,rx_call,fontdict=fontdict,ha='center')
 
+            # Plot Wave Source Locations
+            if hasattr(self,'wave_list'):
+                for wave in self.wave_list:
+                    wlat    = wave['src_lat']
+                    wlon    = wave['src_lon']
+                    ax.scatter(wlon,wlat,marker='^',s=100,zorder=110,ec='k',fc='red')
+
             ax.set_xlim(xlim)
             ax.set_ylim(ylim)
 
@@ -472,7 +479,13 @@ class iono_3d(object):
                     ax.text(tx_lon,tx_lat+offset,tx_call,fontdict=fontdict,ha='center',transform=ccrs.PlateCarree())
                     ax.text(rx_lon,rx_lat+offset,rx_call,fontdict=fontdict,ha='center',transform=ccrs.PlateCarree())
 
-            import ipdb; ipdb.set_trace()
+            # Plot Wave Source Locations
+            if hasattr(self,'wave_list'):
+                for wave in self.wave_list:
+                    wlat    = wave['src_lat']
+                    wlon    = wave['src_lon']
+                    ax.scatter(wlon,wlat,marker='^',s=100,zorder=110,ec='k',fc='red',transform=ccrs.PlateCarree())
+
 
 #            ax.set_xlim(xlim)
 #            ax.set_ylim(ylim)
