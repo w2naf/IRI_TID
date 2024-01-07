@@ -26,6 +26,11 @@ import cartopy.crs as ccrs
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 
 #import pyiri2016
+
+# Michael Hirsch's IRI2016 - https://github.com/space-physics/iri2016 
+import iri2016
+
+# Victoria Forsythe's PyIRI - https://github.com/victoriyaforsythe/PyIRI
 import PyIRI
 import PyIRI.main_library as ml
 
@@ -110,10 +115,15 @@ class iono_3d(object):
 
         self.profiles   = {}
 
-    def run_iri(self):
+    def run_iri(self,engine="iri2016"):
         """
         Generate 3D array of electron densities from IRI.
+
+        engine:
+            'PyIRI':    Victoria Forsythe's PyIRI (https://github.com/victoriyaforsythe/PyIRI)
+            'iri2016':  Michael Hirsch's IRI2016 Python Wrapper (https://github.com/space-physics/iri2016)
         """
+
         nDates  = len(self.dates)
         nLats   = len(self.lats)
         nLons   = len(self.lons)
@@ -125,28 +135,37 @@ class iono_3d(object):
         iri_rundcts = []
         edens_inxs  = []
         for dInx,date in tqdm.tqdm(enumerate(self.dates),desc='Prepping IRI Run Dictionaries',dynamic_ncols=True,total=len(self.dates)):
-            year    = date.year
-            month   = date.month
-            day     = date.day
-            dhour   = date.hour + date.minute/60.
-            ahr     = np.array([dhour])
-            alat_2d, alon_2d = np.meshgrid(self.lats,self.lons)
-            alat    = np.reshape(alat_2d, alat_2d.size)
-            alon    = np.reshape(alon_2d, alon_2d.size)
-            aalt    = self.alts
-            f107    = 100
+            if engine == 'PyIRI':
+                year    = date.year
+                month   = date.month
+                day     = date.day
+                dhour   = date.hour + date.minute/60.
+                ahr     = np.array([dhour])
+                alat_2d, alon_2d = np.meshgrid(self.lats,self.lons)
+                alat    = np.reshape(alat_2d, alat_2d.size)
+                alon    = np.reshape(alon_2d, alon_2d.size)
+                aalt    = self.alts
+                f107    = 100
 
-            # Specify what coefficients to use for the peak of F2 layer:
-            # 0 = CCIR, 1 = URSI
-            ccir_or_ursi    = 0
+                # Specify what coefficients to use for the peak of F2 layer:
+                # 0 = CCIR, 1 = URSI
+                ccir_or_ursi    = 0
 
-            f2, f1, e_peak, es_peak, sun, mag, edp = ml.IRI_density_1day(year, month, day, 
-                    ahr, alon, alat, aalt, f107, PyIRI.coeff_dir, ccir_or_ursi)
+                f2, f1, e_peak, es_peak, sun, mag, edp = ml.IRI_density_1day(year, month, day, 
+                        ahr, alon, alat, aalt, f107, PyIRI.coeff_dir, ccir_or_ursi)
 
-            for alt_inx, alt in enumerate(self.alts):
-                edp_ll = np.reshape(edp[0,alt_inx,:],(nLons,nLats)).T
-                # edens[dinx,latinx,loninx,alt_inx]
-                edens[dInx,:,:,alt_inx]    = edp_ll
+                for alt_inx, alt in enumerate(self.alts):
+                    edp_ll = np.reshape(edp[0,alt_inx,:],(nLons,nLats)).T
+                    # edens[dinx,latinx,loninx,alt_inx]
+                    edens[dInx,:,:,alt_inx]    = edp_ll
+            elif engine == 'iri2016':
+                for latinx, lat in enumerate(self.lats):
+                    for loninx, lon in enumerate(self.lons):
+                        
+                        altkmrange  = [np.min(self.alts),np.max(self.alts),self.alt_step]
+                        iri = iri2016.IRI(date, altkmrange, lat, lon)
+                        # edens[dinx,latinx,loninx,alt_inx]
+                        edens[dInx,latinx,loninx,:] = iri['ne']
 
         ################################################################################
 
