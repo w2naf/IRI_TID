@@ -38,8 +38,8 @@ kw_args['lon_1']    =  180.0
 iono = ionolib.iono_grid.iono_3d(**kw_args)
 wave_list = []
 #wave_list.append(dict(src_lat=40.679917,src_lon=-105.040944,amplitude=0.50,lambda_h=250,T_minutes=15))
-wave_list.append(dict(src_lat=60.,src_lon= -80.,amplitude=0.50,lambda_h=250,T_minutes=15))
-iono.generate_wave(wave_list)
+wave_list.append(dict(src_lat=50.,src_lon= -60.,amplitude=0.50,lambda_h=250,T_minutes=15))
+#iono.generate_wave(wave_list)
 
 radar = 'fhe'
 hdw_data = pydarn.read_hdw_file(radar,kw_args['sDate'])
@@ -62,17 +62,17 @@ prof_dct['rx_lon']  = rx_lon
 iono.generate_tx_rx_profile(**prof_dct)
 iono.plot_profiles(output_dir=profile_dir)
 
-## World
-#xlim    = (-180,180)
-#ylim    = (-90,90)
+# World
+xlim    = (-180,180)
+ylim    = (-90,90)
 
 ## CONUS
 #xlim    = (-130,-56)
 #ylim    = (20,55)
-#
-# CONUS + Canada
-xlim    = (-130,-56)
-ylim    = (20,80)
+
+## CONUS + Canada
+#xlim    = (-130,-56)
+#ylim    = (20,80)
 
 iono.plot_maps(output_dir=map_dir,xlim=xlim,ylim=ylim)
 #iono.plot_maps_ortho(output_dir=map_dir,xlim=xlim,ylim=ylim)

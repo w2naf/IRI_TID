@@ -71,7 +71,8 @@ class iono_3d(object):
 
         self.dates      = dates
         self.lats       = lats
-        self.lons       = lons % 360. # Adjust so lons are between 0 and 360 deg.
+#        self.lons       = lons % 360. # Adjust so lons are between 0 and 360 deg.
+        self.lons       = lons
         self.alts       = alts
         self.lat_step   = lat_step
         self.lon_step   = lon_step
@@ -415,6 +416,60 @@ class iono_3d(object):
 
             fig.savefig(_filename,bbox_inches='tight')
             plt.close()
+
+            ################################################################################
+            # Plot electron density profiles of endpoints for validation with IRI runs on CCMC
+            # https://kauai.ccmc.gsfc.nasa.gov/instantrun/iri/
+            if plot_profile_paths == 'all':
+                for prof_key,profile in self.profiles.items():
+                    fig     = plt.figure(figsize=(15,8))
+                    nrows   = 2
+                    ncols   = 1
+                    ax_inx  = 0
+                    pfxs    = ['tx','rx']
+                    for pfx in pfxs:
+                        ax_inx += 1
+                        ax  = fig.add_subplot(nrows,ncols,ax_inx)
+
+                        # Get latitude, altitude, and call of endpoint.
+                        call     = profile.attrs['{!s}_call'.format(pfx)]
+                        lat      = profile.attrs['{!s}_lat'.format(pfx)]
+                        lon      = profile.attrs['{!s}_lon'.format(pfx)]
+                        if lon > 180:
+                            lon = lon - 360.
+
+                        # Find closest lat/lon in currently calculated electron density array.
+                        clst_lat_inx    = np.argmin(np.abs(lats-lat))
+                        clst_lat        = lats[clst_lat_inx]
+
+                        clst_lon_inx    = np.argmin(np.abs(lons-lon))
+                        clst_lon        = lons[clst_lon_inx]
+
+                        edp = edens[dInx,clst_lat_inx,clst_lon_inx,:]
+                        ax.plot(alts,edp,marker='.')
+
+                        ax.set_xlabel('Altitude [km]')
+                        ax.set_ylabel(r'IRI Electron Density [m$^{-3}$]')
+                        actual      = '({:0.1f}\N{DEGREE SIGN} N, {:0.1f}\N{DEGREE SIGN} E)'.format(clst_lat,clst_lon)
+                        requested   = '{!s} ({:0.1f}\N{DEGREE SIGN} N, {:0.1f}\N{DEGREE SIGN} E)'.format(call,lat,lon)
+
+                        ax.set_title('Endpoint: {!s}\nActual Plotted: {!s}'.format(requested,actual))
+                    
+                    title   = []
+                    title.append('IRI Endpoint Profiles')
+                    title.append('{!s}'.format(date.strftime('%Y %b %d - %H%M UT')))
+                    fig.text(0.5,1.00,'\n'.join(title),ha='center',va='bottom',fontdict={'weight':'bold','size':'large'})
+
+                    fname = '{!s}_{!s}-{!s}_endPointProfiles'.format(date.strftime('%Y%m%d_%H%MUT'),
+                            profile.attrs['tx_call'],profile.attrs['rx_call'])
+                    _filename = os.path.join(output_dir,fname)
+
+                    fig.tight_layout()
+                    fig.savefig(_filename,bbox_inches='tight')
+                    plt.close()
+            import ipdb; ipdb.set_trace()
+
+
 
     def plot_maps_ortho(self,alt=250.,output_dir='output',figsize=(15,8),
             xlim=None,ylim=None,plot_profile_paths='all'):
