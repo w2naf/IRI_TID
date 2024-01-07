@@ -447,6 +447,7 @@ class iono_3d(object):
 
                         edp = edens[dInx,clst_lat_inx,clst_lon_inx,:]
                         ax.plot(alts,edp,marker='.')
+                        ax.grid(True)
 
                         ax.set_xlabel('Altitude [km]')
                         ax.set_ylabel(r'IRI Electron Density [m$^{-3}$]')
@@ -467,9 +468,6 @@ class iono_3d(object):
                     fig.tight_layout()
                     fig.savefig(_filename,bbox_inches='tight')
                     plt.close()
-            import ipdb; ipdb.set_trace()
-
-
 
     def plot_maps_ortho(self,alt=250.,output_dir='output',figsize=(15,8),
             xlim=None,ylim=None,plot_profile_paths='all'):
