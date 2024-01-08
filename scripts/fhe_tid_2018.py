@@ -18,6 +18,8 @@ map_dir= 'output/maps'
 ionolib.gen_lib.prep_dirs({0:map_dir},php=True)
 
 kw_args             = {}
+#kw_args['engine']   = 'PyIRI'  # Victoria Forsythe's PyIRI (https://github.com/victoriyaforsythe/PyIRI)
+kw_args['engine']   = 'iri2016' # Michael Hirsch's IRI2016 Python Wrapper (https://github.com/space-physics/iri2016)
 kw_args['sDate']    = datetime.datetime(2018,12,10,18,30)
 kw_args['eDate']    = datetime.datetime(2018,12,10,18,30)
 kw_args['hgt_0']    =   50.0
@@ -30,10 +32,10 @@ kw_args['lon_1']    =  -70.0
 kw_args['lat_step'] =    1.00
 kw_args['lon_step'] =    1.00
 
-#kw_args['lat_0']    =   -90.
-#kw_args['lat_1']    =    90.
-#kw_args['lon_0']    = -180.0
-#kw_args['lon_1']    =  180.0
+kw_args['lat_0']    =   -90.
+kw_args['lat_1']    =    90.
+kw_args['lon_0']    = -180.0
+kw_args['lon_1']    =  180.0
 
 iono = ionolib.iono_grid.iono_3d(**kw_args)
 wave_list = []

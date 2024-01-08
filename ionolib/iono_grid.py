@@ -64,7 +64,13 @@ class iono_3d(object):
             hgt_0 =  250., hgt_1 =  300., hgt_step=100.0,
             lat_0 =   30., lat_1 =   80., lat_step=5.0,
             lon_0 = -100., lon_1 =  -40., lon_step=5.0,
+            engine = "PyIRI",
             data_dir = 'data', cache = True):
+        """
+        engine:
+            'PyIRI':    Victoria Forsythe's PyIRI (https://github.com/victoriyaforsythe/PyIRI)
+            'iri2016':  Michael Hirsch's IRI2016 Python Wrapper (https://github.com/space-physics/iri2016)
+        """
 
         dates   = [sDate]
         while dates[-1] < eDate:
@@ -74,6 +80,7 @@ class iono_3d(object):
         lons    = np.arange(lon_0,lon_1,lon_step)
         alts    = np.arange(hgt_0,hgt_1,hgt_step)
 
+        self.engine     = engine
         self.dates      = dates
         self.lats       = lats
 #        self.lons       = lons % 360. # Adjust so lons are between 0 and 360 deg.
@@ -84,6 +91,7 @@ class iono_3d(object):
         self.alt_step   = hgt_step
 
         fname   = []
+        fname.append(engine)
         fname.append(sDate.strftime('%Y%m%d.%H%MUT'))
         fname.append(eDate.strftime('%Y%m%d.%H%MUT'))
         fname.append('{:.1f}min'.format(dt.total_seconds()/60.))
@@ -115,13 +123,9 @@ class iono_3d(object):
 
         self.profiles   = {}
 
-    def run_iri(self,engine="iri2016"):
+    def run_iri(self):
         """
         Generate 3D array of electron densities from IRI.
-
-        engine:
-            'PyIRI':    Victoria Forsythe's PyIRI (https://github.com/victoriyaforsythe/PyIRI)
-            'iri2016':  Michael Hirsch's IRI2016 Python Wrapper (https://github.com/space-physics/iri2016)
         """
 
         nDates  = len(self.dates)
@@ -135,7 +139,7 @@ class iono_3d(object):
         iri_rundcts = []
         edens_inxs  = []
         for dInx,date in tqdm.tqdm(enumerate(self.dates),desc='Prepping IRI Run Dictionaries',dynamic_ncols=True,total=len(self.dates)):
-            if engine == 'PyIRI':
+            if self.engine == 'PyIRI':
                 year    = date.year
                 month   = date.month
                 day     = date.day
@@ -158,7 +162,7 @@ class iono_3d(object):
                     edp_ll = np.reshape(edp[0,alt_inx,:],(nLons,nLats)).T
                     # edens[dinx,latinx,loninx,alt_inx]
                     edens[dInx,:,:,alt_inx]    = edp_ll
-            elif engine == 'iri2016':
+            elif self.engine == 'iri2016':
                 for latinx, lat in enumerate(self.lats):
                     for loninx, lon in enumerate(self.lons):
                         
@@ -217,18 +221,12 @@ class iono_3d(object):
             flats_flons.append([tmp['distLat'],tmp['distLon']])
         flats_flons         = np.array(flats_flons)
 
-        shape               = flats_flons.shape
-        flats_flons         = flats_flons.flatten()
-        tf                  = flats_flons < 0
-        flats_flons[tf]     = 360. + flats_flons[tf]
-        flats_flons.shape   = shape
-
         # Put the field points into a mesh.
         fLATS   = np.zeros([len(ranges),len(self.alts)])
         fLONS   = np.zeros([len(ranges),len(self.alts)])
         fALTS   = np.zeros([len(ranges),len(self.alts)])
         for rInx,flat_flon in enumerate(flats_flons):
-            fLATS[rInx,:]   = flat_flon[1]
+            fLATS[rInx,:]   = flat_flon[0]
             fLONS[rInx,:]   = flat_flon[1]
             fALTS[rInx,:]   = self.alts
 
