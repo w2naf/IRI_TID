@@ -158,10 +158,11 @@ class iono_3d(object):
                 f2, f1, e_peak, es_peak, sun, mag, edp = ml.IRI_density_1day(year, month, day, 
                         ahr, alon, alat, aalt, f107, PyIRI.coeff_dir, ccir_or_ursi)
 
-                for alt_inx, alt in enumerate(self.alts):
-                    edp_ll = np.reshape(edp[0,alt_inx,:],(nLons,nLats)).T
-                    # edens[dinx,latinx,loninx,alt_inx]
-                    edens[dInx,:,:,alt_inx]    = edp_ll
+                for inx,(lat,lon) in enumerate(zip(alat,alon)):
+                    latinx  = np.where(self.lats == lat)[0][0]
+                    loninx  = np.where(self.lons == lon)[0][0]
+                    edens[dInx,latinx,loninx,:]  = edp[0,:,inx]
+
             elif self.engine == 'iri2016':
                 for latinx, lat in enumerate(self.lats):
                     for loninx, lon in enumerate(self.lons):
@@ -189,7 +190,7 @@ class iono_3d(object):
         self.iri_dataset    = ds
         return ds
 
-    def generate_tx_rx_profile(self,tx_lat,tx_lon,rx_lat,rx_lon,range_step=51.,
+    def generate_tx_rx_profile(self,tx_lat,tx_lon,rx_lat,rx_lon,range_step=5,
             tx_call='None',rx_call='None',interp_type='nearest'):
         """
         Creates a 2D slice profile of the 3D IRI grid between a transmit location and receive location for each
