@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import datetime 
+import os
 
 import matplotlib
 matplotlib.use('Agg')
@@ -12,10 +13,10 @@ output_dir  = 'output'
 ionolib.gen_lib.prep_dirs({0:output_dir},clear_output_dirs=True,php=False)
 
 profile_dir= 'output/profiles'
-ionolib.gen_lib.prep_dirs({0:profile_dir},php=True)
+ionolib.gen_lib.prep_dirs({0:profile_dir},php=False)
 
 map_dir= 'output/maps'
-ionolib.gen_lib.prep_dirs({0:map_dir},php=True)
+ionolib.gen_lib.prep_dirs({0:map_dir},php=False)
 
 kw_args             = {}
 #kw_args['engine']   = 'PyIRI'  # Victoria Forsythe's PyIRI (https://github.com/victoriyaforsythe/PyIRI)
@@ -40,8 +41,8 @@ kw_args['lon_step'] =    0.10
 iono = ionolib.iono_grid.iono_3d(**kw_args)
 wave_list = []
 #wave_list.append(dict(src_lat=40.679917,src_lon=-105.040944,amplitude=0.50,lambda_h=250,T_minutes=15))
-wave_list.append(dict(src_lat=80.,src_lon= -70.,amplitude=0.50,lambda_h=350,T_minutes=15))
-#iono.generate_wave(wave_list)
+wave_list.append(dict(src_lat=70.,src_lon= -70.,amplitude=0.50,lambda_h=350,T_minutes=15))
+iono.generate_wave(wave_list)
 
 radar = 'fhe'
 hdw_data = pydarn.read_hdw_file(radar,kw_args['sDate'])
@@ -62,21 +63,22 @@ prof_dct['rx_call'] = ''
 prof_dct['rx_lat']  = rx_lat
 prof_dct['rx_lon']  = rx_lon
 iono.generate_tx_rx_profile(**prof_dct)
+iono.profiles_to_netcdf(output_dir=profile_dir)
 iono.plot_profiles(output_dir=profile_dir)
 
-# World
-xlim    = (-180,180)
-ylim    = (-90,90)
+## World
+#xlim    = (-180,180)
+#ylim    = (-90,90)
 
 ## CONUS
 #xlim    = (-130,-56)
 #ylim    = (20,55)
 
-## CONUS + Canada
-#xlim    = (-130,-56)
-#ylim    = (20,80)
+# CONUS + Canada
+xlim    = (-130,-56)
+ylim    = (20,80)
 
 iono.plot_maps(output_dir=map_dir,xlim=xlim,ylim=ylim)
 #iono.plot_maps_ortho(output_dir=map_dir,xlim=xlim,ylim=ylim)
-
+iono.iri_dataset.to_netcdf(os.path.join(map_dir,iono.fname))
 import ipdb; ipdb.set_trace()

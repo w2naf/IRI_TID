@@ -104,20 +104,24 @@ class iono_3d(object):
         fname.append('{:.0f}E'.format(lon_0))
         fname.append('{:.0f}E'.format(lon_1))
         fname.append('{:.0f}deg'.format(lon_step))
-        fname   = '_'.join(fname)+'.p.bz2'
-        fpath   = os.path.join(data_dir,fname)
+#        fname   = '_'.join(fname)+'.p.bz2'
+        fname       = '_'.join(fname)+'.nc'
+        self.fname  = fname
+        fpath       = os.path.join(data_dir,fname)
 
         if cache:
             if not os.path.exists(data_dir):
                 os.makedirs(data_dir)
 
             if os.path.exists(fpath):
-                with bz2.BZ2File(fpath,'r') as fl:
-                    self.iri_dataset = pickle.load(fl)
+                self.iri_dataset = xr.load_dataset(fpath)
+#                with bz2.BZ2File(fpath,'r') as fl:
+#                    self.iri_dataset = pickle.load(fl)
             else:
                 ds  = self.run_iri() 
-                with bz2.BZ2File(fpath,'w') as fl:
-                    pickle.dump(ds,fl)
+                ds.to_netcdf(fpath)
+#                with bz2.BZ2File(fpath,'w') as fl:
+#                    pickle.dump(ds,fl)
         else:
             ds  = self.run_iri() 
 
@@ -259,11 +263,39 @@ class iono_3d(object):
         # Base filename to be used with this profile.
         fname_base  = '{tx_call}_{rx_call}'.format(tx_call=tx_call,rx_call=rx_call)
 
-        # Create XArray Dataset
+#        # Create XArray Dataset
+#        ds  = xr.Dataset(
+#                data_vars=dict(
+#                    electron_density = (['date','range','alt'],Ne_profile),
+#                    dip              = (['date','range','alt'],Ne_profile*0)
+#                    ),
+#                coords=dict(
+#                    date        = self.dates,
+#                    range       = ranges,
+#                    alt         = self.alts
+#                    ),
+#                attrs=dict(
+#                    glats      = field_lats,
+#                    glons      = field_lons,
+#                    dip        = Ne_profile*0.,
+#                    edensTHT   = edensTHT,
+#                    tx_call    = tx_call,
+#                    tx_lat     = tx_lat,
+#                    tx_lon     = tx_lon,
+#                    rx_call    = rx_call,
+#                    rx_lat     = rx_lat,
+#                    rx_lon     = rx_lon,
+#                    fname_base = fname_base
+#                )
+#            )
+
         ds  = xr.Dataset(
                 data_vars=dict(
                     electron_density = (['date','range','alt'],Ne_profile),
-                    dip              = (['date','range','alt'],Ne_profile*0)
+                    dip              = (['date','range','alt'],Ne_profile*0),
+                    glats            = (['range'],field_lats),
+                    glons            = (['range'],field_lons),
+                    edensTHT         = (['range'],edensTHT)
                     ),
                 coords=dict(
                     date        = self.dates,
@@ -271,10 +303,6 @@ class iono_3d(object):
                     alt         = self.alts
                     ),
                 attrs=dict(
-                    glats      = field_lats,
-                    glons      = field_lons,
-                    dip        = Ne_profile*0.,
-                    edensTHT   = edensTHT,
                     tx_call    = tx_call,
                     tx_lat     = tx_lat,
                     tx_lon     = tx_lon,
@@ -288,6 +316,22 @@ class iono_3d(object):
         self.profiles[dict_key] = ds
         return self.profiles
 
+    def profiles_to_netcdf(self,keys=None,output_dir=None):
+        if keys is None:
+            keys = self.profiles.keys()
+        
+        paths = []
+        for key in keys:
+            profl       = self.profiles[key]
+            dates       = list(map(pd.to_datetime,profl['date'].values))
+            fname_base  = profl.attrs['fname_base']
+
+            dminS = min(dates).strftime('%Y%d%m.%H%M')
+            dmaxS = max(dates).strftime('%Y%d%m.%H%M')
+            _filename = os.path.join(output_dir,'{!s}-{!s}_{!s}_profile.nc'.format(dminS,dmaxS,fname_base))
+
+            profl.to_netcdf(_filename)
+
     def plot_profiles(self,keys=None,output_dir='output',filename=None,figsize=(10,6)):
 
         if keys is None:
@@ -300,8 +344,8 @@ class iono_3d(object):
             dates       = list(map(pd.to_datetime,profl['date'].values))
             alts        = profl['alt'].values
             ranges      = profl['range'].values
-            lats        = profl.attrs['glats']
-            lons        = profl.attrs['glons']
+            lats        = profl['glats']
+            lons        = profl['glons']
             fname_base  = profl.attrs['fname_base']
 
             range_step  = np.mean(np.diff(ranges))
@@ -385,10 +429,10 @@ class iono_3d(object):
 
             if plot_profile_paths == 'all':
                 for prof_key,profile in self.profiles.items():
-                    glons       = profile.attrs['glons']
+                    glons       = profile['glons']
                     tf          = glons > 180
                     glons[tf]   = glons[tf]-360.
-                    glats       = profile.attrs['glats']
+                    glats       = profile['glats']
                     ax.plot(glons,glats,marker='o',color='k',lw=4,zorder=100)
 
                     tx_call     = profile.attrs['tx_call']
@@ -612,5 +656,6 @@ class iono_3d(object):
             wave        = amplitude*np.cos(k_h*RANGES - omega*SECS)
             ds          = ds + wave*ds
 
+        ds.attrs['wave_list'] = str(wave_list)
         self.wave_list      = wave_list
         self.iri_dataset    = ds
