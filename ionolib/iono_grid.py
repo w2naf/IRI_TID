@@ -2,7 +2,6 @@
 import os
 import shutil
 import datetime
-import pickle
 import bz2
 
 from multiprocessing import Pool
@@ -27,12 +26,22 @@ from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 
 #import pyiri2016
 
-# Michael Hirsch's IRI2016 - https://github.com/space-physics/iri2016 
-import iri2016
+try:
+    # Michael Hirsch's IRI2016 - https://github.com/space-physics/iri2016 
+    import iri2016
+except:
+    print('Michael Hirsch\'s IRI2016 Not Installed')
+    print('If you want to use this engine, please install from:')
+    print('https://github.com/space-physics/iri2016') 
 
-# Victoria Forsythe's PyIRI - https://github.com/victoriyaforsythe/PyIRI
-import PyIRI
-import PyIRI.main_library as ml
+try:
+    # Victoria Forsythe's PyIRI - https://github.com/victoriyaforsythe/PyIRI
+    import PyIRI
+    import PyIRI.main_library as ml
+except:
+    print('Victoria Forsythe\'s PyIRI Not Installed')
+    print('If you want to use this engine, please install from:')
+    print('https://github.com/victoriyaforsythe/PyIRI')
 
 try:
     from . import geopack
@@ -104,7 +113,6 @@ class iono_3d(object):
         fname.append('{:.0f}E'.format(lon_0))
         fname.append('{:.0f}E'.format(lon_1))
         fname.append('{:.0f}deg'.format(lon_step))
-#        fname   = '_'.join(fname)+'.p.bz2'
         fname       = '_'.join(fname)+'.nc'
         self.fname  = fname
         fpath       = os.path.join(data_dir,fname)
@@ -115,13 +123,9 @@ class iono_3d(object):
 
             if os.path.exists(fpath):
                 self.iri_dataset = xr.load_dataset(fpath)
-#                with bz2.BZ2File(fpath,'r') as fl:
-#                    self.iri_dataset = pickle.load(fl)
             else:
                 ds  = self.run_iri() 
                 ds.to_netcdf(fpath)
-#                with bz2.BZ2File(fpath,'w') as fl:
-#                    pickle.dump(ds,fl)
         else:
             ds  = self.run_iri() 
 
