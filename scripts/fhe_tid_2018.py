@@ -5,6 +5,12 @@ import os
 import matplotlib
 matplotlib.use('Agg')
 
+# The GeographicLib is likely more accurate than geooack.
+# Geographiclib - https://geographiclib.sourceforge.io/Python/2.0/
+# mamba install conda-forge::geographiclib
+from geographiclib.geodesic import Geodesic
+geod = Geodesic.WGS84
+
 import pydarn
 import ionolib
 
@@ -26,9 +32,9 @@ kw_args['hgt_0']    =    0.0
 kw_args['hgt_1']    =  600.0
 kw_args['hgt_step'] =    3.0
 kw_args['lat_0']    =   30.0
-kw_args['lat_1']    =   55.0
+kw_args['lat_1']    =   60.0
 kw_args['lon_0']    = -110.0
-kw_args['lon_1']    =  -70.0
+kw_args['lon_1']    =  -60.0
 kw_args['lat_step'] =    0.10
 kw_args['lon_step'] =    0.10
 
@@ -36,7 +42,6 @@ kw_args['lon_step'] =    0.10
 #kw_args['lat_1']    =    90.
 #kw_args['lon_0']    = -180.0
 #kw_args['lon_1']    =  180.0
-
 
 print('Generating 3d Ionosphere...')
 iono = ionolib.iono_grid.iono_3d(**kw_args)
@@ -54,9 +59,9 @@ tx_lat   = hdw_data.geographic.lat
 tx_lon   = hdw_data.geographic.lon
 boresite = hdw_data.boresight.physical
 
-rx_dct   = ionolib.geopack.calcDistPnt(tx_lat,tx_lon,0.,az=boresite,el=0,dist=2500.)
-rx_lat   = rx_dct['distLat']
-rx_lon   = rx_dct['distLon']
+rx_dct   = geod.Direct(tx_lat, tx_lon, boresite, 3000e3)
+rx_lat   = rx_dct['lat2']
+rx_lon   = rx_dct['lon2']
 
 prof_dct            = {}
 prof_dct['tx_call'] = radar.upper()
