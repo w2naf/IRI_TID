@@ -24,7 +24,17 @@ import cartopy
 import cartopy.crs as ccrs
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 
-#import pyiri2016
+# The GeographicLib is likely more accurate than geooack.
+# Geographiclib - https://geographiclib.sourceforge.io/Python/2.0/
+# mamba install conda-forge::geographiclib
+from geographiclib.geodesic import Geodesic
+geod = Geodesic.WGS84
+
+try:
+    from . import geopack
+except:
+    import geopack
+Re = 6371 # Earth Radius in km
 
 try:
     # Michael Hirsch's IRI2016 - https://github.com/space-physics/iri2016 
@@ -43,13 +53,6 @@ except:
     print('If you want to use this engine, please install from:')
     print('https://github.com/victoriyaforsythe/PyIRI')
 
-try:
-    from . import geopack
-except:
-    import geopack
-
-
-Re = 6371 # Earth Radius in km
 
 def calculate_scale(data,stddevs=2.,lim='auto'):
     if lim == 'auto':
@@ -219,16 +222,23 @@ class iono_3d(object):
         coords              = list(zip(LATS.flatten(),LONS.flatten(),ALTS.flatten()))
 
         # Determine the ranges and azimuth along the profile path.
-        dist        = Re * geopack.greatCircleDist(tx_lat,tx_lon,rx_lat,rx_lon)
-        ranges      = np.arange(0,dist,range_step)
-        az          = geopack.greatCircleAzm(tx_lat,tx_lon,rx_lat,rx_lon)
+        invl    = geod.InverseLine(tx_lat,tx_lon,rx_lat,rx_lon)
+        dist    = invl.s13*1e-3   # Distance in km
+        az      = invl.azi1
 
-        # Calculate the lats/lons to be used along the profile path (field points).
-        flats_flons   = []
+        ranges  = np.arange(0,dist,range_step)
+
+        glats   = []
+        glons   = []
         for x in ranges:
-            tmp = geopack.calcDistPnt(tx_lat,tx_lon,origAlt=0,az=az,dist=x,el=0)
-            flats_flons.append([tmp['distLat'],tmp['distLon']])
-        flats_flons         = np.array(flats_flons)
+            s   = min(x*1e3,invl.s13) # invl.s13 is the total line distance in m
+            tmp = invl.Position(s,Geodesic.STANDARD)
+            glat        = tmp['lat2']
+            glon        = tmp['lon2']
+
+            glats.append(glat)
+            glons.append(glon)
+        flats_flons = np.array([glats,glons]).T
 
         # Put the field points into a mesh.
         fLATS   = np.zeros([len(ranges),len(self.alts)])
