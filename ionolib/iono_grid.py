@@ -30,10 +30,13 @@ from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from geographiclib.geodesic import Geodesic
 geod = Geodesic.WGS84
 
+# Geopack is vectorized and faster than geographiclib, so it is still useful
+# for certain applications.
 try:
     from . import geopack
 except:
     import geopack
+
 Re = 6371 # Earth Radius in km
 
 try:
@@ -277,32 +280,7 @@ class iono_3d(object):
         # Base filename to be used with this profile.
         fname_base  = '{tx_call}_{rx_call}'.format(tx_call=tx_call,rx_call=rx_call)
 
-#        # Create XArray Dataset
-#        ds  = xr.Dataset(
-#                data_vars=dict(
-#                    electron_density = (['date','range','alt'],Ne_profile),
-#                    dip              = (['date','range','alt'],Ne_profile*0)
-#                    ),
-#                coords=dict(
-#                    date        = self.dates,
-#                    range       = ranges,
-#                    alt         = self.alts
-#                    ),
-#                attrs=dict(
-#                    glats      = field_lats,
-#                    glons      = field_lons,
-#                    dip        = Ne_profile*0.,
-#                    edensTHT   = edensTHT,
-#                    tx_call    = tx_call,
-#                    tx_lat     = tx_lat,
-#                    tx_lon     = tx_lon,
-#                    rx_call    = rx_call,
-#                    rx_lat     = rx_lat,
-#                    rx_lon     = rx_lon,
-#                    fname_base = fname_base
-#                )
-#            )
-
+        # Create XArray Dataset
         ds  = xr.Dataset(
                 data_vars=dict(
                     electron_density = (['date','range','alt'],Ne_profile),
@@ -317,13 +295,14 @@ class iono_3d(object):
                     alt         = self.alts
                     ),
                 attrs=dict(
-                    tx_call    = tx_call,
-                    tx_lat     = tx_lat,
-                    tx_lon     = tx_lon,
-                    rx_call    = rx_call,
-                    rx_lat     = rx_lat,
-                    rx_lon     = rx_lon,
-                    fname_base = fname_base
+                    tx_call     = tx_call,
+                    tx_lat      = tx_lat,
+                    tx_lon      = tx_lon,
+                    rx_call     = rx_call,
+                    rx_lat      = rx_lat,
+                    rx_lon      = rx_lon,
+                    azm         = az,
+                    fname_base  = fname_base
                 )
             )
 
@@ -635,7 +614,7 @@ class iono_3d(object):
             fig.savefig(_filename,bbox_inches='tight')
             plt.close()
 
-    def generate_wave(self,wave_list=None):
+    def generate_wave(self,wave_list=None,advance_minutes=0.):
         """
         """
         ds      = self.iri_dataset
@@ -658,6 +637,7 @@ class iono_3d(object):
             amplitude   = wave['amplitude']
             lambda_h    = wave['lambda_h']
             T_minutes   = wave['T_minutes']
+            advance_minutes = wave.get('advance_minutes',0.)
 
             SRC_LATS    = np.ones_like(LATS) * src_lat
             SRC_LONS    = np.ones_like(LONS) * src_lon
@@ -667,7 +647,7 @@ class iono_3d(object):
             omega       = (2.*np.pi)/(T_minutes*60.)
             k_h         = (2.*np.pi)/lambda_h
 
-            wave        = amplitude*np.cos(k_h*RANGES - omega*SECS)
+            wave        = amplitude*np.cos(k_h*RANGES - omega*(SECS+advance_minutes*60.))
             ds          = ds + wave*ds
 
         ds.attrs['wave_list'] = str(wave_list)

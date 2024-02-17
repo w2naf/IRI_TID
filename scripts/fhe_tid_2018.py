@@ -49,7 +49,7 @@ iono = ionolib.iono_grid.iono_3d(**kw_args)
 print('Adding in TID...')
 wave_list = []
 #wave_list.append(dict(src_lat=40.679917,src_lon=-105.040944,amplitude=0.50,lambda_h=250,T_minutes=15))
-wave_list.append(dict(src_lat=70.,src_lon= -70.,amplitude=0.50,lambda_h=350,T_minutes=15))
+wave_list.append(dict(src_lat=70.,src_lon= -70.,amplitude=0.50,lambda_h=300,T_minutes=15,advance_minutes=5))
 iono.generate_wave(wave_list)
 
 print('Generating ionospheric profile along chosen path...')
@@ -59,7 +59,7 @@ tx_lat   = hdw_data.geographic.lat
 tx_lon   = hdw_data.geographic.lon
 boresite = hdw_data.boresight.physical
 
-rx_dct   = geod.Direct(tx_lat, tx_lon, boresite, 3000e3)
+rx_dct   = geod.Direct(tx_lat, tx_lon, boresite, 2500e3)
 rx_lat   = rx_dct['lat2']
 rx_lon   = rx_dct['lon2']
 
