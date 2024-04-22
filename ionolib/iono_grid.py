@@ -205,7 +205,7 @@ class iono_3d(object):
         return ds
 
     def generate_tx_rx_profile(self,tx_lat,tx_lon,rx_lat,rx_lon,range_step=5,max_range=None,
-            tx_call='None',rx_call='None',interp_type='nearest'):
+            tx_call='None',rx_call='None',interp_type='nearest',attrs={}):
         """
         Creates a 2D slice profile of the 3D IRI grid between a transmit location and receive location for each
         time step in the grid.
@@ -284,6 +284,19 @@ class iono_3d(object):
         # Base filename to be used with this profile.
         fname_base  = '{tx_call}_{rx_call}'.format(tx_call=tx_call,rx_call=rx_call)
 
+        _attrs = dict(
+                    tx_call     = tx_call,
+                    tx_lat      = tx_lat,
+                    tx_lon      = tx_lon,
+                    rx_call     = rx_call,
+                    rx_lat      = rx_lat,
+                    rx_lon      = rx_lon,
+                    azm         = az,
+                    fname_base  = fname_base
+                )
+
+        _attrs.update(attrs)
+
         # Create XArray Dataset
         ds  = xr.Dataset(
                 data_vars=dict(
@@ -298,16 +311,7 @@ class iono_3d(object):
                     range       = ranges,
                     alt         = self.alts
                     ),
-                attrs=dict(
-                    tx_call     = tx_call,
-                    tx_lat      = tx_lat,
-                    tx_lon      = tx_lon,
-                    rx_call     = rx_call,
-                    rx_lat      = rx_lat,
-                    rx_lon      = rx_lon,
-                    azm         = az,
-                    fname_base  = fname_base
-                )
+                attrs=_attrs
             )
 
         self.profiles[dict_key] = ds

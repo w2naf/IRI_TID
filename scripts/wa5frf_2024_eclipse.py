@@ -59,16 +59,54 @@ iono = ionolib.iono_grid.iono_3d(**kw_args)
 
 print('Generating ionospheric profile along chosen path...')
 
-prof_dct            = {}
-prof_dct['tx_call'] = 'WA5FRF'
-prof_dct['tx_lat']  =  29.574936802385718
-prof_dct['tx_lon']  = -98.8871154108325
-prof_dct['rx_call'] = 'W3USR'
-prof_dct['rx_lat']  =  41.40528906979763
-prof_dct['rx_lon']  = -75.65787801145272 
+prof_dcts = []
+
+prof_dct = {}
+prof_dct['tx_call']     = 'WA5FRF'
+prof_dct['tx_lat']      =  29.574936802385718
+prof_dct['tx_lon']      = -98.8871154108325
+prof_dct['rx_call']     = 'W3USR'
+prof_dct['rx_lat']      =  41.40528906979763
+prof_dct['rx_lon']      = -75.65787801145272 
 prof_dct['range_step']  = 10.
 prof_dct['max_range']   = 3000. + prof_dct['range_step']
-iono.generate_tx_rx_profile(**prof_dct)
+prof_dcts.append(prof_dct)
+
+prof_dct = {}
+prof_dct['tx_call']     = 'WA5FRF'
+prof_dct['tx_lat']      =  29.574936802385718
+prof_dct['tx_lon']      = -98.8871154108325
+prof_dct['rx_call']     = 'N5DUP'
+prof_dct['rx_lat']      =  32.303161
+prof_dct['rx_lon']      = -99.781720
+prof_dct['range_step']  = 10.
+prof_dct['max_range']   = 1500. + prof_dct['range_step']
+prof_dcts.append(prof_dct)
+
+prof_dct = {}
+prof_dct['tx_call']     = 'WA5FRF'
+prof_dct['tx_lat']      =  29.574936802385718
+prof_dct['tx_lon']      = -98.8871154108325
+prof_dct['rx_call']     = 'N5DUP'
+prof_dct['rx_lat']      =  32.303161
+prof_dct['rx_lon']      = -99.781720
+prof_dct['range_step']  = 10.
+prof_dct['max_range']   = 1500. + prof_dct['range_step']
+prof_dcts.append(prof_dct)
+
+prof_dct = {}
+prof_dct['tx_call']     = 'WA5FRF'
+prof_dct['tx_lat']      =  29.574936802385718
+prof_dct['tx_lon']      = -98.8871154108325
+prof_dct['rx_call']     = 'AG5HR'
+prof_dct['rx_lat']      =  32.540077900022794
+prof_dct['rx_lon']      = -97.3002000073522
+prof_dct['range_step']  = 10.
+prof_dct['max_range']   = 1500. + prof_dct['range_step']
+prof_dcts.append(prof_dct)
+
+for prof_dct in prof_dcts:
+    iono.generate_tx_rx_profile(**prof_dct)
 
 print('Saving ionospheric profile to netcdf in {!s}'.format(profile_dir))
 iono.profiles_to_netcdf(output_dir=profile_dir)
@@ -96,12 +134,13 @@ iono.plot_maps(output_dir=map_dir,xlim=xlim,ylim=ylim)
 #iono.plot_maps_ortho(output_dir=map_dir,xlim=xlim,ylim=ylim)
 
 # Raytrace profiles
-freq            = 14.300
 plot_end_range  = None
+freqs   = [5.3, 7.2, 14.3]
 for profile_key,profile in iono.profiles.items():
-    UT          = pd.to_datetime(profile['date'].values[0])
-    date_str    = UT.strftime('%Y%m%d_%H%MUT')
-    png_fname   = '{!s}_{!s}_{:0.0f}kHz_raytrace.png'.format(date_str,profile.attrs['fname_base'],freq*1000)
-    png_fpath   = os.path.join(raytrace_dir,png_fname)
-    plotLAP.main(profile,freq=freq,png_fpath=png_fpath,plot_end_range=plot_end_range)
-    import ipdb; ipdb.set_trace()
+    for freq in freqs:
+        UT          = pd.to_datetime(profile['date'].values[0])
+        date_str    = UT.strftime('%Y%m%d_%H%MUT')
+        png_fname   = '{!s}_{!s}_{:0.0f}kHz_raytrace.png'.format(date_str,profile.attrs['fname_base'],freq*1000)
+        png_fpath   = os.path.join(raytrace_dir,png_fname)
+        plotLAP.main(profile,freq=freq,png_fpath=png_fpath,plot_end_range=plot_end_range)
+import ipdb; ipdb.set_trace()
