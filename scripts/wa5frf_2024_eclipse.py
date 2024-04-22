@@ -40,8 +40,8 @@ kw_args['lat_0']    =   25.0
 kw_args['lat_1']    =   50.0
 kw_args['lon_0']    = -120.0
 kw_args['lon_1']    =  -70.0
-kw_args['lat_step'] =    2.00
-kw_args['lon_step'] =    2.00
+kw_args['lat_step'] =    0.50
+kw_args['lon_step'] =    0.50
 
 #kw_args['lat_0']    =   -90.
 #kw_args['lat_1']    =    90.
@@ -67,6 +67,7 @@ prof_dct['rx_call'] = 'W3USR'
 prof_dct['rx_lat']  =  41.40528906979763
 prof_dct['rx_lon']  = -75.65787801145272 
 prof_dct['range_step']  = 10.
+prof_dct['max_range']   = 3000. + prof_dct['range_step']
 iono.generate_tx_rx_profile(**prof_dct)
 
 print('Saving ionospheric profile to netcdf in {!s}'.format(profile_dir))
@@ -95,11 +96,12 @@ iono.plot_maps(output_dir=map_dir,xlim=xlim,ylim=ylim)
 #iono.plot_maps_ortho(output_dir=map_dir,xlim=xlim,ylim=ylim)
 
 # Raytrace profiles
-freq    = 14.000
+freq            = 14.300
+plot_end_range  = None
 for profile_key,profile in iono.profiles.items():
     UT          = pd.to_datetime(profile['date'].values[0])
     date_str    = UT.strftime('%Y%m%d_%H%MUT')
     png_fname   = '{!s}_{!s}_{:0.0f}kHz_raytrace.png'.format(date_str,profile.attrs['fname_base'],freq*1000)
     png_fpath   = os.path.join(raytrace_dir,png_fname)
-    plotLAP.main(profile,freq=freq,png_fpath=png_fpath)
+    plotLAP.main(profile,freq=freq,png_fpath=png_fpath,plot_end_range=plot_end_range)
     import ipdb; ipdb.set_trace()

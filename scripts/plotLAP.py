@@ -29,6 +29,12 @@ import mpl_toolkits.axisartist.floating_axes as floating_axes
 from matplotlib.projections import polar
 from mpl_toolkits.axisartist.grid_finder import FixedLocator, DictFormatter
 
+# The GeographicLib is likely more accurate than geooack.
+# Geographiclib - https://geographiclib.sourceforge.io/Python/2.0/
+# mamba install conda-forge::geographiclib
+from geographiclib.geodesic import Geodesic
+geod = Geodesic.WGS84
+
 from pylap.raytrace_2d import raytrace_2d 
 
 mpl.rcParams['font.size']               = 16.0
@@ -292,7 +298,7 @@ def plot_rays(tx_lat,tx_lon,ranges,heights,
             for inx,ray in enumerate(rpd):
                 xx  = ray['ground_range']/Re
                 yy  = ray['height']*scale_heights + Re
-                aax.plot(xx,yy,color='red',zorder=100,lw=7)
+                aax.plot(xx,yy,color='red',zorder=100,lw=4)
 
     # Plot Receiver ################################################################ 
     if 'rx_lat' in kwargs and 'rx_lon' in kwargs:
@@ -300,7 +306,12 @@ def plot_rays(tx_lat,tx_lon,ranges,heights,
         rx_lon      = kwargs.get('rx_lon')
         rx_label    = kwargs.get('rx_label','Receiver')
 
-        rx_theta    = kwargs.get('rx_range')/Re
+        # Determine the ranges and azimuth along the profile path.
+        invl    = geod.InverseLine(tx_lat,tx_lon,rx_lat,rx_lon)
+        rx_dist_km = invl.s13*1e-3   # Distance in km
+        rx_az      = invl.azi1
+
+        rx_theta    = rx_dist_km/Re
         
         hndl    = aax.scatter([rx_theta],[Re],s=950,marker='*',color='red',ec='k',zorder=100,clip_on=False,label=rx_label)
         aax.legend([hndl],[rx_label],loc='upper right',scatterpoints=1,fontsize='large',labelcolor='black')
@@ -365,18 +376,143 @@ def main(iono_ds,freq=14.,
     num_elevs       = len(elevs)
     freqs           = freq * np.ones(num_elevs, dtype = float) # Need to pass a vector of frequencies the same length as len(elevs)
     tol             = [1e-7, 0.01, 10]  # ODE tolerance and min/max step sizes
-    nhops           = 1                 # number of hops to raytrace
+    nhops           = 2                 # number of hops to raytrace
     irregs_flag     = 0                 # no irregularities - not interested in Doppler spread or field aligned irregularities
 
+#    import ipdb; ipdb.set_trace()
     print('Generating {} 2D NRT rays ...'.format(num_elevs))
     ray_data, ray_path_data, ray_path_state = \
        raytrace_2d(origin_lat, origin_lon, elevs, ray_bear, freqs, nhops,
                    tol, irregs_flag, iono_en_grid, iono_en_grid_5,
                collision_freq, start_height, height_inc, range_inc, irreg)
 
+    tx_lat      = iono_ds.attrs.get('tx_lat')
+    tx_lon      = iono_ds.attrs.get('tx_lon')
+    tx_call     = iono_ds.attrs.get('tx_call')
+    rx_lat      = iono_ds.attrs.get('rx_lat')
+    rx_lon      = iono_ds.attrs.get('rx_lon')
+    rx_call     = iono_ds.attrs.get('rx_call')
+
+    ########################
+    # Convert to DataFrame #
+    ########################
+    rd_df = {}
+    rd_df['ray_id'] = []
+    rd_df['hop_id'] = []
+    keys    = list(ray_data[0].keys())
+    for key in keys:
+        rd_df[key] = []
+
+    for ray_id,rd in enumerate(ray_data):
+        nhops   = len(rd['ray_label'])
+
+        rd_df['ray_id'] += [ray_id]*nhops
+        rd_df['hop_id'] += list(range(nhops))
+
+        for key in keys:
+            if key in ['frequency','nhops_attempted']:
+                val = [rd[key]] * nhops
+            else:
+                val = rd[key].tolist()
+
+            rd_df[key] += val
+
+    rd_df   	= pd.DataFrame(rd_df)
+    csv_fpath	= png_fpath[:-4]+'.rayData.csv'
+
+    hdr = []
+    hdr.append('# '+csv_fpath)
+    hdr.append('# TX: {!s} {:0.1f}\N{DEGREE SIGN}N, {:0.1f}\N{DEGREE SIGN}E, {:0.0f}\N{DEGREE SIGN} AZM'.format(tx_call,origin_lat,origin_lon,ray_bear))
+	
+    line= """#
+# Ray Data CSV File Produced from PyLAP/PHaRLAP 2D Ray Tracing
+#
+# lat: Geographic latitude of Ray Trace Termination
+# lon: Geographic longitude of Ray Trace Termination
+# ground_range: [km] Ground range is the distance along the ground from the ray transmit location to the point on the ground where the ray lands.
+# group_range: [km] Group range is the time taken for the ray to traverse the path multiplied by c, the speed of light.
+#       Due to the group retardation effect of the ionosphere the actual speed of the wave packet is < c and so the
+#       group range will be greater than the actual physical path of the ray.
+# phase_path: [km] Phase path is the accumulated phase over the path converted to a distance in free space. The phase speed is > c and so
+#       the phase path will be less than actual physical path of the ray.
+# geometric_path_length: [km] Geometric path length is the actual distance travelled by the radio waves
+# initial_elev: [degrees] Take-off elevation angle
+# final_elev: [degrees] Received elevation angle
+# apogee: [km] Altitude of highest point of the ray.
+# gnd_rng_to_apogee: [km] Ground distance from transmitter to apogee location.
+# plasma_frequency_at_apogee: [MHz]
+# virtual_height: [km] Virtual Height at Apogee (assumes specular reflection)
+# effective_range [m] Effective range accounts for the focussing/defocussing effects.
+#       Davies, 1990, “Ionospheric Radio” gives a good overview of group path and phase path in chapter 1. Effective range is
+#       discussed in Chapter 7.3.2 (page 210 – 213)
+# total_absorption:
+# deviative_absorption:
+# TEC_path: 
+# Doppler_shift:
+# Doppler_spread: 
+# FAI_backscatter_loss:
+# frequency: [MHz] Frequency of radio wave being raytraced.
+# nhops_attempted:
+# ray_label: - label for each hop attempted which indicates what the ray has done.
+#        1  for ray reaching ground
+#        0  for ray becoming evanescent, raytracing terminated
+#       -1  for field aligned backscatter - ray reflected with appropriate scattering loss, raytracing terminated
+#       -2  ray has penetrated the ionosphere - raytracing terminated
+#       -3  ray has exceeded max. ground range - raytracing terminated
+#       -4  ray angular coordinate has become negative (bad - should never happen) - raytracing terminated
+#       -5  ray has exceeded the maximum allowed points along path (20000 points) - raytracing terminated
+#       -6  ray is near antipodal point, the WGS84 coordinate conversion routines are unreliable - terminate raytracing
+#     -100  a catastrophic error occured - terminate raytracing
+#
+"""
+    hdr.append(line)
+    header = '\n'.join(hdr)
+    with open(csv_fpath,'w') as fl:
+        fl.write(header)
+    rd_df.to_csv(csv_fpath,mode='a',index=False)
+
+    ########################
+    # Search for Rays      #
+    ########################
+
+    # Determine the ranges and azimuth along the profile path.
+    invl        = geod.InverseLine(tx_lat,tx_lon,rx_lat,rx_lon)
+    rx_dist_km = invl.s13*1e-3   # Distance in km
+
+    search_radius       = 20.
+    srch_ray_path_data  = None
+    if search_radius is not None:
+        srch_range_0    = rx_dist_km - search_radius
+        srch_range_1    = rx_dist_km + search_radius
+
+        tf_0    = rd_df['ground_range'] >= srch_range_0
+        tf_1    = rd_df['ground_range'] <  srch_range_1
+        tf_2    = rd_df['ray_label'] == 1
+        tf      = np.logical_and.reduce([tf_0,tf_1,tf_2])
+
+        srch_rd_df  = rd_df[tf]
+
+        if len(srch_rd_df) > 0:
+            srch_ray_inx    = srch_rd_df['ray_id'].unique()
+            srch_ray_path_data = [ray_path_data[x] for x in srch_ray_inx]
+
+            hdr.append('# RX: {!s} {:0.1f}\N{DEGREE SIGN}N, {:0.1f}\N{DEGREE SIGN}E'.format(rx_call,rx_lat,rx_lon))
+            hdr.append('# Search Radius: {:0.0f} km'.format(search_radius))
+            header = '\n'.join(hdr)
+
+            srch_csv_fpath	= png_fpath[:-4]+'.search_rayData.csv'
+            with open(srch_csv_fpath,'w') as fl:
+                fl.write(header)
+            srch_rd_df.to_csv(srch_csv_fpath,mode='a',index=False)
+
     ###################
     ### Plot Result ###
     ###################
+
+    kwRays = {}
+    kwRays['rx_lat']    = iono_ds.attrs.get('rx_lat')
+    kwRays['rx_lon']    = iono_ds.attrs.get('rx_lon')
+    kwRays['rx_label']  = iono_ds.attrs.get('rx_call')
 
     fig = plt.figure(figsize=(35,10))
     ax, aax, cbax   = plot_rays(origin_lat,origin_lon,ranges,heights,
@@ -385,21 +521,26 @@ def main(iono_ds,freq=14.,
             iono_cmap='viridis', iono_lim=None, iono_title='Ionospheric Parameter',
             plot_rays=True,
             ray_path_data=ray_path_data, 
-            srch_ray_path_data=None, 
+            srch_ray_path_data=srch_ray_path_data, 
             fig=None, rect=111, ax=None, aax=None, cbax=None,
             plot_colorbar=True,title='',
-            iono_rasterize=False,scale_Re=1.,scale_heights=1.,terminator=False)
+            iono_rasterize=False,scale_Re=1.,scale_heights=1.,terminator=False,**kwRays)
 
     title   = []
+    title.append(os.path.basename(png_fpath))
     title.append('{!s}'.format(UT.strftime('%Y %b %d %H:%M UTC')))
     title   = '\n'.join(title)
     ax.set_title(title,loc='left')
 
     title   = []
-    title.append(os.path.basename(png_fpath))
-    title.append('Origin {:0.1f}\N{DEGREE SIGN}N, {:0.1f}\N{DEGREE SIGN}E, {:0.0f}\N{DEGREE SIGN} AZM'.format(origin_lat,origin_lon,ray_bear))
+    title.append('TX: {!s} {:0.1f}\N{DEGREE SIGN}N, {:0.1f}\N{DEGREE SIGN}E, {:0.0f}\N{DEGREE SIGN} AZM'.format(tx_call,origin_lat,origin_lon,ray_bear))
+    title.append('RX: {!s} {:0.1f}\N{DEGREE SIGN}N, {:0.1f}\N{DEGREE SIGN}E'.format(rx_call,rx_lat,rx_lon))
+    if search_radius is not None:
+        title.append('Search Radius: {:0.0f} km'.format(search_radius))
     title   = '\n'.join(title)
     ax.set_title(title,loc='right')
 
     print('Saving Figure: {!s}'.format(png_fpath))
     fig.savefig(png_fpath,bbox_inches='tight')
+
+    return ray_data, ray_path_data, ray_path_state

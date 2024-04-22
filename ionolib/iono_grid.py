@@ -204,7 +204,7 @@ class iono_3d(object):
         self.iri_dataset    = ds
         return ds
 
-    def generate_tx_rx_profile(self,tx_lat,tx_lon,rx_lat,rx_lon,range_step=5,
+    def generate_tx_rx_profile(self,tx_lat,tx_lon,rx_lat,rx_lon,range_step=5,max_range=None,
             tx_call='None',rx_call='None',interp_type='nearest'):
         """
         Creates a 2D slice profile of the 3D IRI grid between a transmit location and receive location for each
@@ -214,6 +214,7 @@ class iono_3d(object):
         rx_lat:         Receiver (ending) latitude
         rx_lon:         Receiver (ending) longitude
         range_step:     Range step in km
+        max_range:      Override distance between TX and RX if not None. [km]
         tx_call:        String identifying the transmitter
         rx_call:        String identifying the receiver
         interp_type:    Method of interpolation to use.
@@ -228,6 +229,9 @@ class iono_3d(object):
         invl    = geod.InverseLine(tx_lat,tx_lon,rx_lat,rx_lon)
         dist    = invl.s13*1e-3   # Distance in km
         az      = invl.azi1
+
+        if max_range is not None:
+            dist = max_range
 
         ranges  = np.arange(0,dist,range_step)
 
