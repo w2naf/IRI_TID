@@ -1,5 +1,7 @@
 matplotlib
-pyiri2016
+iri2016
+PyIRI
+geographiclib
 ipdb
 scipy
 numpy
