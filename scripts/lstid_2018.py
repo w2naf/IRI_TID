@@ -50,7 +50,9 @@ print('Adding in TID...')
 wave_list = []
 #wave_list.append(dict(src_lat=40.679917,src_lon=-105.040944,amplitude=0.50,lambda_h=250,T_minutes=15))
 #wave_list.append(dict(src_lat=70.,src_lon= -70.,amplitude=0.50,lambda_h=300,T_minutes=15,advance_minutes=5))
-wave_list.append(dict(src_lat=60.,src_lon= 112.,amplitude=0.50,lambda_h=1000,T_minutes=120,advance_minutes=5))
+src_lat =  60.
+src_lon = 112.
+wave_list.append(dict(src_lat=src_lat,src_lon=src_lon,amplitude=0.50,lambda_h=1000,T_minutes=120,advance_minutes=5))
 iono.generate_wave(wave_list)
 
 print('Generating ionospheric profile along chosen path...')
@@ -64,6 +66,11 @@ radar = 'TX'
 tx_lat   =  30.
 tx_lon   = -85.
 boresite = 0.
+
+# Raytrace back to source region.
+# Calculate boresite back to source region.
+gresult  = geod.Inverse(tx_lat,tx_lon,src_lat,src_lon)
+boresite = gresult['azi1']
 
 rx_dct   = geod.Direct(tx_lat, tx_lon, boresite, 3000e3)
 rx_lat   = rx_dct['lat2']
