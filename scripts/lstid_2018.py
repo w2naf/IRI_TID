@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+# This script is used to generate the LSTID-perturbed IRI profile used in the 
+# Figure 2d raytrace for Frissell et al. (2024) GRL, submitted.
+# Nathaniel A. Frissell - 6 September 2024
+
 import datetime 
 import os
 
