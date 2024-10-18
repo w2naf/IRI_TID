@@ -1,0 +1,8 @@
+#!/bin/bash
+mpiexec -n 1 /home/w2naf/davitpy/davitpy/models/raydarn/rtFort /data/rt_mstid/data/event/rt_data/20141101_0000UT_bks_07/rtrun.0.inp /data/rt_mstid/data/event/rt_data/20141101_0000UT_bks_07/ 0
+
+gdb /home/w2naf/davitpy/davitpy/models/raydarn/rtFort 
+
+b <line_nr>
+
+r /data/mstid/statistics/music_scripts/output/raytrace/fhe_20121221_paper2_14500kHz_lambda451km/rt_data/20121221_1700UT_fhe_00/rtrun.0.inp /data/mstid/statistics/music_scripts/output/raytrace/fhe_20121221_paper2_14500kHz_lambda451km/rt_data/20121221_1700UT_fhe_00/ 0
