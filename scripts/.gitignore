@@ -1,5 +1,7 @@
 data/
 output/
+output_PyIRI/
+output_iri2016/
 eclipse2024/
 *.swp
 *~
