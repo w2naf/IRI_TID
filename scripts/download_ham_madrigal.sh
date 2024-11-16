@@ -5,6 +5,6 @@ globalDownload.py --verbose                         \
     --user_email=nathaniel.frissell@scranton.edu    \
     --user_affiliation="The+University+of+Scranton" \
     --format="hdf5"                                 \
-    --startDate="12/18/2018"                        \
-    --endDate="12/18/2018"                          \
+    --startDate="12/15/2018"                        \
+    --endDate="12/15/2018"                          \
     --inst=8308
