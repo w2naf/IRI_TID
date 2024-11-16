@@ -1,6 +1,6 @@
 globalDownload.py --verbose                         \
     --url=http://cedar.openmadrigal.org             \
-    --outputDir=data                                \
+    --outputDir=ham_data                            \
     --user_fullname="Nathaniel+Frissell"            \
     --user_email=nathaniel.frissell@scranton.edu    \
     --user_affiliation="The+University+of+Scranton" \
