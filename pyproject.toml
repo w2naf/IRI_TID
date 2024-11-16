@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools >= 38.6", "pip >= 10"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ionolib"
+version = "0.0.15"
+description = "Slice, dice, and visualize numerical ionospheres"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Nathaniel A. Frissell", email = "nathaniel.frissell@scranton.edu"},
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Scientific/Engineering :: Atmospheric Science",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: English",
+  "Programming Language :: Python :: 3",
+  "Operating System :: POSIX :: Linux",
+]
+
+keywords = [
+  "ionosphere",
+  "modeling",
+  "modelling"
+]
+
+dependencies = [
+  "fortranformat",
+  "matplotlib",
+  "numpy",
+  "scipy",
+  "iri2016",
+  "PyIRI",
+  "geographiclib",
+  "ipdb",
+  "pandas"
+]
+
+#[project.optional-dependencies]
+#test = [
+#  "coveralls < 3.3",
+#  "flake8",
+#  "flake8-docstrings",
+#  "hacking >= 1.0",
+#]
+#doc = [
+#  "extras_require",
+#  "ipython",
+#  "m2r2",
+#  "numpydoc",
+#  "sphinx",
+#  "sphinx_rtd_theme >= 1.2.2"
+#]
+
+[project.urls]
+Source = "https://github.com/w2naf/IRI_TID"
