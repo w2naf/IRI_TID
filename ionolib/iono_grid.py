@@ -166,6 +166,7 @@ class iono_3d(object):
                 alat    = np.reshape(alat_2d, alat_2d.size)
                 alon    = np.reshape(alon_2d, alon_2d.size)
                 aalt    = self.alts
+                print('WARNING: Using hard-coded f107 = 100')
                 f107    = 100
 
                 # Specify what coefficients to use for the peak of F2 layer:

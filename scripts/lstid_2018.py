@@ -37,10 +37,11 @@ kw_args['eDate']    = datetime.datetime(2018,12,15,20)
 kw_args['hgt_0']    =    0.0
 kw_args['hgt_1']    =  600.0
 kw_args['hgt_step'] =    3.0
-kw_args['lat_0']    =   30.0
-kw_args['lat_1']    =   60.0
-kw_args['lon_0']    = -110.0
-kw_args['lon_1']    =  -60.0
+
+kw_args['lat_0']    =   20.0
+kw_args['lat_1']    =   80.0
+kw_args['lon_0']    = -130.0
+kw_args['lon_1']    =  -50.0
 kw_args['lat_step'] =    0.10
 kw_args['lon_step'] =    0.10
 
