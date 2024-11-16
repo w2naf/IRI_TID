@@ -18,18 +18,20 @@ geod = Geodesic.WGS84
 import pydarn
 import ionolib
 
-output_dir  = 'output'
+engine  = 'PyIRI'  # Victoria Forsythe's PyIRI (https://github.com/victoriyaforsythe/PyIRI)
+#engine  = 'iri2016' # Michael Hirsch's IRI2016 Python Wrapper (https://github.com/space-physics/iri2016)
+
+output_dir  = f'output_{engine}'
 ionolib.gen_lib.prep_dirs({0:output_dir},clear_output_dirs=True,php=False)
 
-profile_dir= 'output/profiles'
+profile_dir = os.path.join(output_dir,'profiles')
 ionolib.gen_lib.prep_dirs({0:profile_dir},php=False)
 
-map_dir= 'output/maps'
+map_dir     = os.path.join(output_dir,'maps')
 ionolib.gen_lib.prep_dirs({0:map_dir},php=False)
 
 kw_args             = {}
-#kw_args['engine']   = 'PyIRI'  # Victoria Forsythe's PyIRI (https://github.com/victoriyaforsythe/PyIRI)
-kw_args['engine']   = 'iri2016' # Michael Hirsch's IRI2016 Python Wrapper (https://github.com/space-physics/iri2016)
+kw_args['engine']   = engine
 kw_args['sDate']    = datetime.datetime(2018,12,15,20)
 kw_args['eDate']    = datetime.datetime(2018,12,15,20)
 kw_args['hgt_0']    =    0.0
