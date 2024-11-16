@@ -80,12 +80,15 @@ class iono_3d(object):
             lat_0 =   30., lat_1 =   80., lat_step=5.0,
             lon_0 = -100., lon_1 =  -40., lon_step=5.0,
             engine = "PyIRI",
-            data_dir = 'data', cache = True):
+            data_dir = None, cache = True):
         """
         engine:
             'PyIRI':    Victoria Forsythe's PyIRI (https://github.com/victoriyaforsythe/PyIRI)
             'iri2016':  Michael Hirsch's IRI2016 Python Wrapper (https://github.com/space-physics/iri2016)
         """
+
+        if data_dir is None:
+            data_dir = f'data_{engine}'
 
         dates   = [sDate]
         while dates[-1] < eDate:
@@ -282,7 +285,7 @@ class iono_3d(object):
         edensTHT[0] = 0
 
         # Base filename to be used with this profile.
-        fname_base  = '{tx_call}_{rx_call}'.format(tx_call=tx_call,rx_call=rx_call)
+        fname_base  = f'{tx_call}_{rx_call}_{self.engine}'
 
         _attrs = dict(
                     tx_call     = tx_call,
@@ -372,11 +375,11 @@ class iono_3d(object):
                 ax.set_ylabel('Altitude [km]')
 
                 cbar    = fig.colorbar(pcoll,orientation='vertical',shrink=0.60,pad=.10,ticks=ticks)
-                txt     = r'IRI Electron Density [m$^{-3}$]'
+                txt     = self.engine + r' Electron Density [m$^{-3}$]'
                 cbar.set_label(txt)
 
                 txt = []
-                txt.append('IRI Electron Density')
+                txt.append(f'{self.engine} Electron Density')
                 txt.append('{0} {1}'.format(key,date.strftime('%d %b %Y %H%M UT')))
                 ax.set_title('\n'.join(txt))
 
@@ -465,16 +468,18 @@ class iono_3d(object):
             ax.set_xlim(xlim)
             ax.set_ylim(ylim)
 
-            cbar_label  = r'IRI Electron Density [m$^{-3}$]'
+            cbar_label  = self.engine + r' Electron Density [m$^{-3}$]'
             cbar        = fig.colorbar(pcoll,orientation='vertical',shrink=0.65,pad=0.075,ticks=ticks)
             cbar.set_label(cbar_label,fontdict={'weight':'bold','size':'large'})
 
             # Plot Title
             txt = []
-            txt.append('{0} - Alt: {1:.0f} km'.format(date.strftime('%d %b %Y %H%M UT'),float(alts[alt_inx])))
+            txt.append('{!s} {!s} - Alt: {:.0f} km'.format(self.engine,
+                                                           date.strftime('%d %b %Y %H%M UT'),float(alts[alt_inx])))
             ax.set_title('\n'.join(txt),fontdict={'weight':'bold','size':'xx-large'})
 
-            fname = '{0}_{1:03.0f}km_edens_map.png'.format(date.strftime('%Y%m%d_%H%MUT'),float(alts[alt_inx]))
+            fname = '{!s}_{:03.0f}km_edens_map{!s}.png'.format(
+                    date.strftime('%Y%m%d_%H%MUT'),float(alts[alt_inx]),self.engine)
             _filename = os.path.join(output_dir,fname)
 
             fig.savefig(_filename,bbox_inches='tight')
