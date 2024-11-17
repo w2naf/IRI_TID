@@ -4,8 +4,6 @@ import shutil
 import datetime
 import bz2
 
-from multiprocessing import Pool
-
 import tqdm
 
 import matplotlib
