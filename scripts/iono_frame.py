@@ -69,9 +69,7 @@ if len(args) != 0:
 if time_0 is None:
     time_0 = time
 
-output_dir  = f'output_{engine}'
-ionolib.gen_lib.prep_dirs({0:output_dir},clear_output_dirs=True,php=False)
-
+output_dir  = os.path.join('output',engine)
 profile_dir = os.path.join(output_dir,'profiles')
 ionolib.gen_lib.prep_dirs({0:profile_dir},php=False)
 

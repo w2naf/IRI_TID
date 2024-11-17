@@ -86,7 +86,7 @@ class iono_3d(object):
         """
 
         if data_dir is None:
-            data_dir = f'data_{engine}'
+            data_dir = os.path.join('output',engine,'data')
 
         dates   = [sDate]
         while dates[-1] < eDate:
@@ -477,7 +477,7 @@ class iono_3d(object):
                                                            date.strftime('%d %b %Y %H%M UT'),float(alts[alt_inx])))
             ax.set_title('\n'.join(txt),fontdict={'weight':'bold','size':'xx-large'})
 
-            fname = '{!s}_{:03.0f}km_edens_map{!s}.png'.format(
+            fname = '{!s}_{:03.0f}km_edens_map_{!s}.png'.format(
                     date.strftime('%Y%m%d_%H%MUT'),float(alts[alt_inx]),self.engine)
             _filename = os.path.join(output_dir,fname)
 
