@@ -24,7 +24,8 @@ def run_cmd(cmd):
     return subprocess.call(cmd, shell=True)
 
 multiproc   = True
-engine      = 'PyIRI'
+#engine      = 'PyIRI'
+engine      = 'iri2016'
 sTime       = datetime.datetime(2018,12,15,12)
 eTime       = sTime + datetime.timedelta(hours=12)
 dt          = datetime.timedelta(minutes=10)
@@ -44,7 +45,8 @@ for time in times:
 cmds = [gen_cmd(rd) for rd in run_dicts]
 
 if multiproc:
-    count   = multiprocessing.cpu_count()
+#    count   = multiprocessing.cpu_count()
+    count   = 40
     pool    = multiprocessing.Pool(processes=count)
     pool.map(run_cmd,cmds)
 else:
