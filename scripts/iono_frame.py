@@ -88,8 +88,8 @@ kw_args['lat_0']    =   20.0
 kw_args['lat_1']    =   80.0
 kw_args['lon_0']    = -130.0
 kw_args['lon_1']    =  -50.0
-kw_args['lat_step'] =    0.50
-kw_args['lon_step'] =    0.50
+kw_args['lat_step'] =    0.10
+kw_args['lon_step'] =    0.10
 
 #kw_args['lat_0']    =   -90.
 #kw_args['lat_1']    =    90.
