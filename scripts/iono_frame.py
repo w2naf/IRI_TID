@@ -102,8 +102,8 @@ kw_args['lat_0']    =   20.0
 kw_args['lat_1']    =   80.0
 kw_args['lon_0']    = -130.0
 kw_args['lon_1']    =  -50.0
-kw_args['lat_step'] =    0.10
-kw_args['lon_step'] =    0.10
+kw_args['lat_step'] =    0.50
+kw_args['lon_step'] =    0.50
 
 #kw_args['lat_0']    =   -90.
 #kw_args['lat_1']    =    90.
@@ -137,9 +137,9 @@ for rinx, row in df_paths.iterrows():
     prof_dct['rx_lon']      = row['rxlon']
     prof_dct['range_step']  = 10.
     prof_dct['max_range']   = 3000.
+    prof_dct['interp_type'] = 'nearest'
     prof_dcts.append(prof_dct)
 
-prof_dcts = prof_dcts[:10]
 for prof_dct in prof_dcts:
     print(f'{datetime.datetime.now()}: iono.generate_tx_rx_profile({prof_dct})')
     with open(log_fpath,'a') as log_fl:
