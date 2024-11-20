@@ -76,6 +76,20 @@ ionolib.gen_lib.prep_dirs({0:profile_dir},php=False)
 map_dir     = os.path.join(output_dir,'maps')
 ionolib.gen_lib.prep_dirs({0:map_dir},php=False)
 
+# Create a log file.
+log_dir     = os.path.join(output_dir,'logs')
+ionolib.gen_lib.prep_dirs({0:log_dir},php=False)
+log_fname   = []
+log_fname.append(time.strftime('%Y%m%dT%H%Mz'))
+log_fname.append(time_0.strftime('T0-%Y%m%dT%H%Mz'))
+log_fname.append(engine)
+log_fname.append('iono_frame')
+log_fname   = '_'.join(log_fname)+'.log'
+log_fpath   = os.path.join(log_dir,log_fname)
+print(f'Logging to {log_fpath}')
+with open(log_fpath,'w') as log_fl:
+    log_fl.write(f'Log File: {log_fname}\n')
+
 kw_args             = {}
 kw_args['engine']   = engine
 kw_args['sDate']    = time
@@ -108,30 +122,30 @@ wave_list.append(dict(src_lat=60.,src_lon= 112.,amplitude=0.50,lambda_h=1000,T_m
 iono.generate_wave(wave_list)
 
 print('Generating ionospheric profile along chosen path...')
-#radar = 'fhe'
-#hdw_data = pydarn.read_hdw_file(radar,kw_args['sDate'])
-#tx_lat   = hdw_data.geographic.lat
-#tx_lon   = hdw_data.geographic.lon
-#boresite = hdw_data.boresight.physical
 
-radar = 'TX'
-tx_lat   =  30.
-tx_lon   = -85.
-boresite = 0.
+paths_fname = '20181215_14000-14350kHz_montePaths.csv'
+df_paths    = pd.read_csv(paths_fname,comment='#')
 
-rx_dct   = geod.Direct(tx_lat, tx_lon, boresite, 3000e3)
-rx_lat   = rx_dct['lat2']
-rx_lon   = rx_dct['lon2']
+prof_dcts   = []
+for rinx, row in df_paths.iterrows():
+    prof_dct                = {}
+    prof_dct['tx_call']     = row['call_sign_tx']
+    prof_dct['tx_lat']      = row['txlat']
+    prof_dct['tx_lon']      = row['txlon']
+    prof_dct['rx_call']     = row['call_sign_rx']
+    prof_dct['rx_lat']      = row['rxlat']
+    prof_dct['rx_lon']      = row['rxlon']
+    prof_dct['range_step']  = 10.
+    prof_dct['max_range']   = 3000.
+    prof_dcts.append(prof_dct)
 
-prof_dct            = {}
-prof_dct['tx_call'] = radar.upper()
-prof_dct['tx_lat']  = tx_lat
-prof_dct['tx_lon']  = tx_lon
-prof_dct['rx_call'] = ''
-prof_dct['rx_lat']  = rx_lat
-prof_dct['rx_lon']  = rx_lon
-prof_dct['range_step']  = 10.
-iono.generate_tx_rx_profile(**prof_dct)
+prof_dcts = prof_dcts[:10]
+for prof_dct in prof_dcts:
+    print(f'{datetime.datetime.now()}: iono.generate_tx_rx_profile({prof_dct})')
+    with open(log_fpath,'a') as log_fl:
+        log_fl.write(f'{datetime.datetime.now()}: iono.generate_tx_rx_profile({prof_dct})\n')
+
+    iono.generate_tx_rx_profile(**prof_dct)
 
 print('Saving ionospheric profile to netcdf in {!s}'.format(profile_dir))
 iono.profiles_to_netcdf(output_dir=profile_dir)
