@@ -331,7 +331,12 @@ class iono_3d(object):
 
             dminS = min(dates).strftime('%Y%d%m.%H%M')
             dmaxS = max(dates).strftime('%Y%d%m.%H%M')
-            _filename = os.path.join(output_dir,'{!s}-{!s}_{!s}_profile.nc'.format(dminS,dmaxS,fname_base))
+
+            profl_dir = os.path.join(output_dir,fname_base)
+            if not os.path.exists(profl_dir):
+                os.makedirs(profl_dir)
+
+            _filename = os.path.join(profl_dir,'{!s}-{!s}_{!s}_profile.nc'.format(dminS,dmaxS,fname_base))
 
             profl.to_netcdf(_filename)
 
@@ -384,10 +389,12 @@ class iono_3d(object):
 
                 fig.tight_layout()
 
+                profl_dir = os.path.join(output_dir,fname_base)
+
                 if filename is None:
-                    _filename = os.path.join(output_dir,'{!s}_{!s}_profile.png'.format(date,fname_base))
+                    _filename = os.path.join(profl_dir,'{!s}_{!s}_profile.png'.format(date,fname_base))
                 else:
-                    _filename = os.path.join(output_dir,filename)
+                    _filename = os.path.join(profl_dir,filename)
 
                 fig.savefig(_filename,bbox_inches='tight')
                 plt.close()
