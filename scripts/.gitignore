@@ -1,5 +1,7 @@
 data/
-output/
+output
+output-0.1deg
+output-0.5deg
 output_PyIRI/
 output_iri2016/
 data_PyIRI/
