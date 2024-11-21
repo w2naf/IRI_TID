@@ -49,8 +49,8 @@ optlist, args = getopt.getopt(sys.argv[1:], arglist, longarglist)
 # Set Default Values
 time    = datetime.datetime(2018,12,15,12)
 time_0  = None
-engine  = 'PyIRI'  # Victoria Forsythe's PyIRI (https://github.com/victoriyaforsythe/PyIRI)
-#engine  = 'iri2016' # Michael Hirsch's IRI2016 Python Wrapper (https://github.com/space-physics/iri2016)
+#engine  = 'PyIRI'  # Victoria Forsythe's PyIRI (https://github.com/victoriyaforsythe/PyIRI)
+engine  = 'iri2016' # Michael Hirsch's IRI2016 Python Wrapper (https://github.com/space-physics/iri2016)
 
 for opt in optlist:
     if opt[0] == '--time':
