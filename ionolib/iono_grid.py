@@ -57,7 +57,6 @@ except:
 try:
     # Victoriya Forsythe's PyIRTAM - https://github.com/victoriyaforsythe/PyIRTAM
     import PyIRTAM
-    import PyIRTAM.main_library
 except:
     print('Victoriya Forsythe\'s PyIRTAM Not Installed')
     print('If you want to use this engine, please install from:')
@@ -205,13 +204,13 @@ class iono_3d(object):
                 # 0 = CCIR, 1 = URSI
                 ccir_or_ursi    = 0
 
-                f2, f1, e_peak, es_peak, sun, mag, edp = PyIRTAM.main_library.IRI_density_1day(year, month, day, 
-                        ahr, alon, alat, aalt, f107, PyIRTAM.coeff_dir, ccir_or_ursi)
+                f2_b, f1_b, e_b, es_b, sun, mag, edp_b, f2_day, f1_day, e_day, es_day, edp_day = PyIRTAM.run_PyIRTAM(year, month, day, ahr, alon, alat, aalt, f107,
+                                                                             download=True)
 
                 for inx,(lat,lon) in enumerate(zip(alat,alon)):
                     latinx  = np.where(self.lats == lat)[0][0]
                     loninx  = np.where(self.lons == lon)[0][0]
-                    edens[dInx,latinx,loninx,:]  = edp[0,:,inx]
+                    edens[dInx,latinx,loninx,:]  = edp_b[0,:,inx]
 
             elif self.engine == 'iri2016':
                 for latinx, lat in enumerate(self.lats):
