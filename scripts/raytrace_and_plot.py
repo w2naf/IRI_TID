@@ -12,6 +12,7 @@ import os
 import numpy as np
 import pandas as pd
 import xarray as xr
+import glob
 
 import matplotlib
 mpl = matplotlib
@@ -477,13 +478,20 @@ class RayTraceAndPlot(object):
         return result
 
 if __name__ == '__main__':
-    iono_nc = 'data/iri_tid_1000km/20181512.2000-20181512.2000_TX__profile.nc'
-    output_dir  = os.path.join('output','Figure_2b')
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    iono_nc_dir     = os.path.join('output','test_PyIRI')
+    iono_ncs        = glob.glob(os.path.join(iono_nc_dir,'*.nc'))
 
-    fname   = 'Figure_2b_TID_RayTrace.png'
-    fpath   = os.path.join(output_dir,fname)
+    for iono_nc in iono_ncs:    
+        # iono_nc         = '20181512.1200-20181512.1200_WW9S_W7VSX_PyIRI_profile.nc'
+        RTaP    = RayTraceAndPlot(iono_nc)
+        
+        # import ipdb; ipdb.set_trace()
 
-    RTaP    = RayTraceAndPlot(iono_nc)
-    RTaP.plot_figure(fpath=fpath)
+        output_dir      = os.path.join('output','raytrace')
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        bname   = os.path.basename(iono_nc)
+        fname   = bname.replace('.nc','_raytrace.png')
+        fpath   = os.path.join(output_dir,fname)
+
+        RTaP.plot_figure(fpath=fpath)
