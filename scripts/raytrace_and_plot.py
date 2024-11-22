@@ -357,13 +357,10 @@ class RayTraceAndPlot(object):
         prmd['nhops']          = nhops                                            # number of hops to raytrace
         prmd['irregs_flag']    = 0                                                # no irregularities - not interested in Doppler spread or field aligned irregularities
 
-
-#        prmd['tx_lat']  = iono_ds.attrs['tx_lat']
-#        prmd['tx_lon']  = iono_ds.attrs['tx_lon']
-        prmd['tx_call'] = iono_ds.attrs['tx_call']
-        prmd['rx_lat']  = iono_ds.attrs['rx_lat']
-        prmd['rx_lon']  = iono_ds.attrs['rx_lon']
-        prmd['rx_call'] = iono_ds.attrs['rx_call']
+        prmd['tx_call'] = iono_ds.attrs.get('tx_call')
+        prmd['rx_lat']  = iono_ds.attrs.get('rx_lat')
+        prmd['rx_lon']  = iono_ds.attrs.get('rx_lon')
+        prmd['rx_call'] = iono_ds.attrs.get('rx_call')
 
         self.ray_trace()
 
