@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
 """
-Figure_2b_TID_RayTrace.py
 Nathaniel A. Frissell
-February 2024
-
-This script is used to generate Figure 2b of the Frissell et al. (2024)
-GRL manuscript on multi-instrument measurements of AGWs, MSTIDs, and LSTIDs.
 """
 import os 
 
@@ -29,6 +24,8 @@ from matplotlib.transforms import Affine2D, Transform
 import mpl_toolkits.axisartist.floating_axes as floating_axes
 from matplotlib.projections import polar
 from mpl_toolkits.axisartist.grid_finder import FixedLocator, DictFormatter
+
+from ionolib import geopack
 
 from pylap.raytrace_2d import raytrace_2d 
 
@@ -114,8 +111,8 @@ def curvedEarthAxes(rect=111, fig=None, minground=0., maxground=2000, minalt=0,
 
     tr_rotate       = Affine2D().rotate(np.pi/2-ang/2)
     tr_shift        = Affine2D().translate(0, Re)
-#    tr              = polar.PolarTransform(apply_theta_transforms=False) + tr_rotate
-    tr              = polar.PolarTransform() + tr_rotate
+    tr              = polar.PolarTransform(apply_theta_transforms=False) + tr_rotate
+    # tr              = polar.PolarTransform() + tr_rotate
 
     grid_helper = \
         floating_axes.GridHelperCurveLinear(tr, extremes=(0, angran, Re+minalt,
@@ -495,3 +492,4 @@ if __name__ == '__main__':
         fpath   = os.path.join(output_dir,fname)
 
         RTaP.plot_figure(fpath=fpath)
+        break
