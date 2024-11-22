@@ -493,7 +493,7 @@ class RayTraceAndPlot(object):
         return result
 
 if __name__ == '__main__':
-    iono_nc_dir     = os.path.join('output','test_PyIRI')
+    iono_nc_dir     = os.path.join('test_PyIRI')
     iono_ncs        = glob.glob(os.path.join(iono_nc_dir,'*.nc'))
 
     for iono_nc in iono_ncs:    
