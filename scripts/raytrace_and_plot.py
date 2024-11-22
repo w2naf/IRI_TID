@@ -307,7 +307,7 @@ def plot_rays(tx_lat,tx_lon,ranges,heights,
         rx_lon      = kwargs.get('rx_lon')
         rx_label    = kwargs.get('rx_label','Receiver')
 
-        rx_theta    = kwargs.get('rx_range')/Re
+        rx_theta    = geopack.greatCircleDist(tx_lat,tx_lon,rx_lat,rx_lon)
         
         hndl    = aax.scatter([rx_theta],[Re],s=950,marker='*',color='red',ec='k',zorder=100,clip_on=False,label=rx_label)
         aax.legend([hndl],[rx_label],loc='upper right',scatterpoints=1,fontsize='large',labelcolor='black')
@@ -383,7 +383,7 @@ class RayTraceAndPlot(object):
         self.ray_path_data  = ray_path_data
         self.ray_path_state = ray_path_state
 
-    def find_receiver(self,tol_km = 25):
+    def find_receiver(self,tol_km = 50):
         """
         %     .ray_label             - label for each hop attempted which indicates
         %                              what the ray has done. 
@@ -437,9 +437,9 @@ class RayTraceAndPlot(object):
         val     = gnd_df.loc[inx,'diff']
 
         if val <= tol_km:
-            self.srch_ray_path_data     = self.ray_path_data[inx]
-            self.srch_ray_path_state    = self.ray_path_state[inx]
-            self.srch_ray_data          = self.ray_data[inx]
+            self.srch_ray_path_data     = [self.ray_path_data[inx]]
+            self.srch_ray_path_state    = [self.ray_path_state[inx]]
+            self.srch_ray_data          = [self.ray_data[inx]]
 
     def plot_figure(self,fpath='output.png',figsize=(40,10),**kwargs):
         fig = plt.figure(figsize=figsize)
@@ -447,6 +447,7 @@ class RayTraceAndPlot(object):
 
         print('Saving Figure: {!s}'.format(fpath))
         fig.savefig(fpath,bbox_inches='tight')
+        plt.close(fig)
 
         # Remove whitespace using mogrify since the curved axes are
         # not compatible with bbox_inches='tight'
@@ -455,7 +456,6 @@ class RayTraceAndPlot(object):
             os.system(cmd)
         except:
             print(f'ERROR: Could not run {cmd}')
-
 
     def plot_ax(self,fig=None,end_range=3000,end_ht=500,
             cbax                = None,
@@ -474,6 +474,11 @@ class RayTraceAndPlot(object):
 
         prmd    = self.prmd
 
+        if hasattr(self,'srch_ray_path_data'):
+            srpd = self.srch_ray_path_data
+        else:
+            srpd = None
+
         _pltd    = {}
         _pltd['tx_lat']             = prmd['origin_lat']
         _pltd['tx_lon']             = prmd['origin_lon']
@@ -490,6 +495,7 @@ class RayTraceAndPlot(object):
         _pltd['iono_arr']           = prmd['iono_en_grid']
         _pltd['iono_param']         = 'iono_en_grid'
         _pltd['ray_path_data']      = self.ray_path_data
+        _pltd['srch_ray_path_data'] = srpd
         _pltd['fig']                = fig 
         _pltd['cbax']               = cbax
         _pltd['plot_colorbar']      = plot_colorbar
