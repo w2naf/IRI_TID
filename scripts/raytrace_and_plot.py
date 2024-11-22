@@ -9,6 +9,8 @@ import pandas as pd
 import xarray as xr
 import glob
 
+import pickle
+
 import matplotlib
 mpl = matplotlib
 matplotlib.use('Agg')
@@ -493,23 +495,33 @@ class RayTraceAndPlot(object):
         return result
 
 if __name__ == '__main__':
-    iono_nc_dir     = os.path.join('test_PyIRI')
+    iono_nc_dir     = os.path.join('test_PyIRI','profiles')
     iono_ncs        = glob.glob(os.path.join(iono_nc_dir,'*.nc'))
+
+    output_dir      = os.path.join('test_PyIRI','raytrace')
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    cache_dir      = os.path.join('test_PyIRI','RTaP_cache')
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
 
     for iono_nc in iono_ncs:    
         # iono_nc         = '20181512.1200-20181512.1200_WW9S_W7VSX_PyIRI_profile.nc'
-        bname   = os.path.basename(iono_nc).replace('.nc','')
-
-        output_dir      = os.path.join('output','raytrace')
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-
-        RTaP    = RayTraceAndPlot(iono_nc)
+        bname       = os.path.basename(iono_nc).replace('.nc','')
+        rtap_fname  = bname + '.rtap.pkl'
+        rtap_fpath  = os.path.join(cache_dir,rtap_fname)
         
-        # import ipdb; ipdb.set_trace()
-
-
+        if not os.path.exists(rtap_fpath):
+            RTaP        = RayTraceAndPlot(iono_nc)
+            with open(rtap_fpath,'wb') as pkl:
+                pickle.dump(RTaP,pkl)
+            print(f'Wrote Cached File: {rtap_fpath}')
+        else:
+            with open(rtap_fpath,'rb') as pkl:
+                RTaP    = pickle.load(pkl)
+            print(f'Using Cached File: {rtap_fpath}')
+        
         png_fname   = bname + '_raytrace.png'
         png_fpath   = os.path.join(output_dir,png_fname)
         RTaP.plot_figure(fpath=png_fpath)
-        break
