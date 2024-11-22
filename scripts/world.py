@@ -18,7 +18,8 @@ geod = Geodesic.WGS84
 import pydarn
 import ionolib
 
-engine  = 'PyIRI'  # Victoria Forsythe's PyIRI (https://github.com/victoriyaforsythe/PyIRI)
+#engine  = 'PyIRI'  # Victoriya Forsythe's PyIRI (https://github.com/victoriyaforsythe/PyIRI)
+engine  = 'PyIRTAM'  # Victoriya Forsythe's PyIRTAN (https://github.com/victoriyaforsythe/PyIRTAM)
 #engine  = 'iri2016' # Michael Hirsch's IRI2016 Python Wrapper (https://github.com/space-physics/iri2016)
 
 output_dir  = f'output_{engine}'

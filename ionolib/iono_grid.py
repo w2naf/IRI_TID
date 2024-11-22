@@ -46,13 +46,21 @@ except:
     print('https://github.com/space-physics/iri2016') 
 
 try:
-    # Victoria Forsythe's PyIRI - https://github.com/victoriyaforsythe/PyIRI
+    # Victoriya Forsythe's PyIRI - https://github.com/victoriyaforsythe/PyIRI
     import PyIRI
-    import PyIRI.main_library as ml
+    import PyIRI.main_library
 except:
-    print('Victoria Forsythe\'s PyIRI Not Installed')
+    print('Victoriya Forsythe\'s PyIRI Not Installed')
     print('If you want to use this engine, please install from:')
     print('https://github.com/victoriyaforsythe/PyIRI')
+
+try:
+    # Victoriya Forsythe's PyIRTAM - https://github.com/victoriyaforsythe/PyIRTAM
+    import PyIRTAM
+except:
+    print('Victoriya Forsythe\'s PyIRTAM Not Installed')
+    print('If you want to use this engine, please install from:')
+    print('https://github.com/victoriyaforsythe/PyIRTAM')
 
 
 def calculate_scale(data,stddevs=2.,lim='auto'):
@@ -81,7 +89,8 @@ class iono_3d(object):
             data_dir = None, cache = True):
         """
         engine:
-            'PyIRI':    Victoria Forsythe's PyIRI (https://github.com/victoriyaforsythe/PyIRI)
+            'PyIRI':    Victoriya Forsythe's PyIRI (https://github.com/victoriyaforsythe/PyIRI)
+            'PyIRTAM':    Victoriya Forsythe's PyIRTAM (https://github.com/victoriyaforsythe/PyIRTAM)
             'iri2016':  Michael Hirsch's IRI2016 Python Wrapper (https://github.com/space-physics/iri2016)
         """
 
@@ -171,13 +180,37 @@ class iono_3d(object):
                 # 0 = CCIR, 1 = URSI
                 ccir_or_ursi    = 0
 
-                f2, f1, e_peak, es_peak, sun, mag, edp = ml.IRI_density_1day(year, month, day, 
+                f2, f1, e_peak, es_peak, sun, mag, edp = PyIRI.main_library.IRI_density_1day(year, month, day, 
                         ahr, alon, alat, aalt, f107, PyIRI.coeff_dir, ccir_or_ursi)
 
                 for inx,(lat,lon) in enumerate(zip(alat,alon)):
                     latinx  = np.where(self.lats == lat)[0][0]
                     loninx  = np.where(self.lons == lon)[0][0]
                     edens[dInx,latinx,loninx,:]  = edp[0,:,inx]
+            elif self.engine == 'PyIRTAM':
+                year    = date.year
+                month   = date.month
+                day     = date.day
+                dhour   = date.hour + date.minute/60.
+                ahr     = np.array([dhour])
+                alat_2d, alon_2d = np.meshgrid(self.lats,self.lons)
+                alat    = np.reshape(alat_2d, alat_2d.size)
+                alon    = np.reshape(alon_2d, alon_2d.size)
+                aalt    = self.alts
+                print('WARNING: Using hard-coded f107 = 100')
+                f107    = 100
+
+                # Specify what coefficients to use for the peak of F2 layer:
+                # 0 = CCIR, 1 = URSI
+                ccir_or_ursi    = 0
+
+                f2_b, f1_b, e_b, es_b, sun, mag, edp_b, f2_day, f1_day, e_day, es_day, edp_day = PyIRTAM.run_PyIRTAM(year, month, day, ahr, alon, alat, aalt, f107,
+                                                                             download=True)
+
+                for inx,(lat,lon) in enumerate(zip(alat,alon)):
+                    latinx  = np.where(self.lats == lat)[0][0]
+                    loninx  = np.where(self.lons == lon)[0][0]
+                    edens[dInx,latinx,loninx,:]  = edp_b[0,:,inx]
 
             elif self.engine == 'iri2016':
                 for latinx, lat in enumerate(self.lats):
