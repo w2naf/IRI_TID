@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Nathaniel A. Frissell
 """
@@ -29,7 +29,10 @@ from mpl_toolkits.axisartist.grid_finder import FixedLocator, DictFormatter
 
 from ionolib import geopack
 
-from pylap.raytrace_2d import raytrace_2d 
+try:
+    from pylap.raytrace_2d import raytrace_2d 
+except:
+    print('PyLAP Not Found... raytracing not possible.')
 
 mpl.rcParams['font.size']               = 16.0
 mpl.rcParams['axes.labelsize']          = 'xx-large'
