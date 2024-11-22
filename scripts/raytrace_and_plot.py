@@ -364,6 +364,9 @@ class RayTraceAndPlot(object):
 
         self.ray_trace()
 
+#        if prmd['rx_lat'] is not None:
+#            self.find_receiver()
+
     def ray_trace(self):
         print('Generating {} 2D NRT rays ...'.format(self.prmd['num_elevs']))
         rt_keys = ['origin_lat', 'origin_lon', 'elevs', 'ray_bear', 'freqs', 'nhops', 'tol', 'irregs_flag', 'iono_en_grid', 'iono_en_grid_5', 'collision_freq', 'start_height', 'height_inc', 'range_inc', 'irreg']
@@ -373,6 +376,12 @@ class RayTraceAndPlot(object):
         self.ray_data       = ray_data
         self.ray_path_data  = ray_path_data
         self.ray_path_state = ray_path_state
+
+    def find_receiver(self):
+        r_data      = self.ray_data
+        rp_data     = self.ray_path_data
+        rp_state    = self.ray_path_state
+        import ipdb; ipdb.set_trace()
 
     def plot_figure(self,fpath='output.png',figsize=(40,10),**kwargs):
         fig = plt.figure(figsize=figsize)
@@ -489,16 +498,18 @@ if __name__ == '__main__':
 
     for iono_nc in iono_ncs:    
         # iono_nc         = '20181512.1200-20181512.1200_WW9S_W7VSX_PyIRI_profile.nc'
-        RTaP    = RayTraceAndPlot(iono_nc)
-        
-        # import ipdb; ipdb.set_trace()
+        bname   = os.path.basename(iono_nc).replace('.nc','')
 
         output_dir      = os.path.join('output','raytrace')
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        bname   = os.path.basename(iono_nc)
-        fname   = bname.replace('.nc','_raytrace.png')
-        fpath   = os.path.join(output_dir,fname)
 
-        RTaP.plot_figure(fpath=fpath)
+        RTaP    = RayTraceAndPlot(iono_nc)
+        
+        # import ipdb; ipdb.set_trace()
+
+
+        png_fname   = bname + '_raytrace.png'
+        png_fpath   = os.path.join(output_dir,png_fname)
+        RTaP.plot_figure(fpath=png_fpath)
         break
