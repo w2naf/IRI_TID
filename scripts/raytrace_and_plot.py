@@ -29,6 +29,8 @@ from mpl_toolkits.axisartist.grid_finder import FixedLocator, DictFormatter
 
 from ionolib import geopack
 
+Re = 6371
+
 try:
     from pylap.raytrace_2d import raytrace_2d 
 except:
@@ -47,7 +49,7 @@ mpl.rcParams['ytick.labelsize']         = 32
 title_fontsize      = 28
 
 def curvedEarthAxes(rect=111, fig=None, minground=0., maxground=2000, minalt=0,
-                    maxalt=1500, Re=6371., scale_heights=1.,nyticks=4, nxticks=4):
+                    maxalt=1500, Re = Re,  scale_heights=1.,nyticks=4, nxticks=4):
     """Create curved axes in ground-range and altitude
 
     Parameters
@@ -305,7 +307,7 @@ def plot_rays(tx_lat,tx_lon,ranges,heights,
         rx_lon      = kwargs.get('rx_lon')
         rx_label    = kwargs.get('rx_label','Receiver')
 
-        rx_theta    = geopack.greatCircleDist(tx_lat,tx_lon,rx_lat,rx_lon)
+        rx_theta    = kwargs.get('rx_range')/Re
         
         hndl    = aax.scatter([rx_theta],[Re],s=950,marker='*',color='red',ec='k',zorder=100,clip_on=False,label=rx_label)
         aax.legend([hndl],[rx_label],loc='upper right',scatterpoints=1,fontsize='large',labelcolor='black')
@@ -366,11 +368,10 @@ class RayTraceAndPlot(object):
         prmd['rx_lat']  = iono_ds.attrs.get('rx_lat')
         prmd['rx_lon']  = iono_ds.attrs.get('rx_lon')
         prmd['rx_call'] = iono_ds.attrs.get('rx_call')
+        if prmd['rx_lat'] is not None:
+            prmd['rx_range']    = Re*geopack.greatCircleDist(prmd['tx_lat'],prmd['tx_lon'],prmd['rx_lat'],prmd['rx_lon'])
 
         self.ray_trace()
-
-#        if prmd['rx_lat'] is not None:
-#            self.find_receiver()
 
     def ray_trace(self):
         print('Generating {} 2D NRT rays ...'.format(self.prmd['num_elevs']))
@@ -382,11 +383,63 @@ class RayTraceAndPlot(object):
         self.ray_path_data  = ray_path_data
         self.ray_path_state = ray_path_state
 
-    def find_receiver(self):
-        r_data      = self.ray_data
+    def find_receiver(self,tol_km = 25):
+        """
+        %     .ray_label             - label for each hop attempted which indicates
+        %                              what the ray has done. 
+        %           = 1  for ray reaching ground                           
+        %             0  for ray becoming evanescent, raytracing terminated
+        %            -1  for field aligned backscatter - ray reflected with
+        %                appropriate scattering loss, raytracing terminated
+        %            -2  ray has penetrated the ionosphere - raytracing terminated 
+        %            -3  ray has exceeded max. ground range - raytracing terminated
+        %            -4  ray angular coordinate has become negative (bad - should 
+        %                never happen) - raytracing terminated
+        %            -5  ray has exceeded the maximum allowed points along path
+        %                (20000 points) - raytracing terminated
+        %            -6  ray is near antipodal point, the WGS84 coordinate
+        %                conversion routines are unreliable - terminate
+        %                raytracing 
+        %          -100  a catastrophic error occured - terminate raytracing
+        """
+        prmd        = self.prmd
+
         rp_data     = self.ray_path_data
         rp_state    = self.ray_path_state
-        import ipdb; ipdb.set_trace()
+        r_data      = self.ray_data
+
+        self.srch_ray_path_data     = None
+        self.srch_ray_path_state    = None
+        self.srch_ray_data          = None
+
+        rx_range    = Re*geopack.greatCircleDist(prmd['origin_lat'],prmd['origin_lon'],prmd['rx_lat'],prmd['rx_lon'])
+
+        hop         = 0
+        ray_dct     = []
+        for rinx,ray in enumerate(r_data):
+            tmp = {}
+            tmp['ray_label']        = ray['ray_label'][hop]
+            tmp['ground_range']     = ray['ground_range'][hop]
+            ray_dct.append(tmp)
+
+        ray_df          = pd.DataFrame(ray_dct)
+        ray_df['diff']  = np.abs(ray_df['ground_range'] - rx_range)
+
+        # Find rays that hit the ground.
+        tf      = ray_df['ray_label'] == 1
+        if np.count_nonzero(tf) == 0:
+            return
+        gnd_df  = ray_df[tf]
+
+        # Find ray closest to rx_range within tolerance
+        iloc    = gnd_df['diff'].argmin()
+        inx     = gnd_df.index[iloc]
+        val     = gnd_df.loc[inx,'diff']
+
+        if val <= tol_km:
+            self.srch_ray_path_data     = self.ray_path_data[inx]
+            self.srch_ray_path_state    = self.ray_path_state[inx]
+            self.srch_ray_data          = self.ray_data[inx]
 
     def plot_figure(self,fpath='output.png',figsize=(40,10),**kwargs):
         fig = plt.figure(figsize=figsize)
@@ -524,6 +577,8 @@ if __name__ == '__main__':
             with open(rtap_fpath,'rb') as pkl:
                 RTaP    = pickle.load(pkl)
             print(f'Using Cached File: {rtap_fpath}')
+
+        RTaP.find_receiver()
         
         png_fname   = bname + '_raytrace.png'
         png_fpath   = os.path.join(output_dir,png_fname)
