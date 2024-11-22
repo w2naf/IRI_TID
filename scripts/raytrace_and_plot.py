@@ -300,7 +300,7 @@ def plot_rays(tx_lat,tx_lon,ranges,heights,
         rx_lon      = kwargs.get('rx_lon')
         rx_label    = kwargs.get('rx_label','Receiver')
 
-        rx_theta    = kwargs.get('rx_range')/Re
+        rx_theta    = geopack.greatCircleDist(tx_lat,tx_lon,rx_lat,rx_lon)
         
         hndl    = aax.scatter([rx_theta],[Re],s=950,marker='*',color='red',ec='k',zorder=100,clip_on=False,label=rx_label)
         aax.legend([hndl],[rx_label],loc='upper right',scatterpoints=1,fontsize='large',labelcolor='black')
@@ -357,6 +357,14 @@ class RayTraceAndPlot(object):
         prmd['nhops']          = nhops                                            # number of hops to raytrace
         prmd['irregs_flag']    = 0                                                # no irregularities - not interested in Doppler spread or field aligned irregularities
 
+
+#        prmd['tx_lat']  = iono_ds.attrs['tx_lat']
+#        prmd['tx_lon']  = iono_ds.attrs['tx_lon']
+        prmd['tx_call'] = iono_ds.attrs['tx_call']
+        prmd['rx_lat']  = iono_ds.attrs['rx_lat']
+        prmd['rx_lon']  = iono_ds.attrs['rx_lon']
+        prmd['rx_call'] = iono_ds.attrs['rx_call']
+
         self.ray_trace()
 
     def ray_trace(self):
@@ -405,6 +413,10 @@ class RayTraceAndPlot(object):
         _pltd    = {}
         _pltd['tx_lat']             = prmd['origin_lat']
         _pltd['tx_lon']             = prmd['origin_lon']
+        _pltd['tx_call']            = prmd['tx_call']
+        _pltd['rx_lat']             = prmd['rx_lat']
+        _pltd['rx_lon']             = prmd['rx_lon']
+        _pltd['rx_call']            = prmd['rx_call']
         _pltd['ranges']             = prmd['ranges']
         _pltd['heights']            = prmd['heights']
         _pltd['maxground']          = end_range
@@ -427,8 +439,8 @@ class RayTraceAndPlot(object):
             title_prms.update({'size':title_size})
 
         title   = []
-        tid_str = ' ($\lambda_h$=1000 km)'
-        title.append('IRI2016 Perturbed with LSTID' + tid_str)
+#        tid_str = ' ($\lambda_h$=1000 km)'
+#        title.append('IRI2016 Perturbed with LSTID' + tid_str)
         title.append('{!s}'.format(prmd['UT'].strftime('%Y %b %d %H:%M UTC')))
         title   = '\n'.join(title)
         ax.set_title(title,loc='left',**title_prms)
