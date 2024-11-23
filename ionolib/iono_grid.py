@@ -327,8 +327,12 @@ class iono_3d(object):
                     rx_lat      = rx_lat,
                     rx_lon      = rx_lon,
                     azm         = az,
+                    engine      = self.engine,
                     fname_base  = fname_base
                 )
+
+        if hasattr(self,'wave_list'):
+            _attrs['wave_list'] = self.wave_list
 
         _attrs.update(attrs)
 

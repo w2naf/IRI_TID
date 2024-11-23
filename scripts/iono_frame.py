@@ -115,13 +115,12 @@ iono = ionolib.iono_grid.iono_3d(**kw_args)
 
 print('Adding in TID...')
 advance_minutes = (time - time_0).total_seconds()/60.
-#wave_list = []
+wave_list = []
 #wave_list.append(dict(src_lat=40.679917,src_lon=-105.040944,amplitude=0.50,lambda_h=250,T_minutes=15))
 #wave_list.append(dict(src_lat=70.,src_lon= -70.,amplitude=0.50,lambda_h=300,T_minutes=15,advance_minutes=5))
-#wave_list.append(dict(src_lat=60.,src_lon= 112.,amplitude=0.50,lambda_h=1000,T_minutes=120,advance_minutes=advance_minutes))
+wave_list.append(dict(src_lat=60.,src_lon= 112.,amplitude=0.50,lambda_h=1000,T_minutes=120,advance_minutes=advance_minutes))
 
-wave_dct    = dict(src_lat=60.,src_lon= 112.,amplitude=0.50,lambda_h=1000,T_minutes=120,advance_minutes=advance_minutes)
-iono.generate_wave([wave_dct])
+iono.generate_wave(wave_list)
 
 print('Generating ionospheric profile along chosen path...')
 
@@ -143,12 +142,11 @@ for rinx, row in df_paths.iterrows():
     prof_dct['interp_type'] = 'nearest'
 
     attrs                   = {}
-    attrs['engine']         = engine
+#    attrs['engine']         = engine
     attrs['tx_rx_pthlen']   = row['pthlen']
     attrs['tx_rx_latcen']   = row['latcen']
     attrs['tx_rx_loncen']   = row['loncen']
     attrs['tx_rx_azm']      = row['azm']
-    attrs['message']        = f'Wave: {wave_dct}'
 
     prof_dct['attrs']       = attrs
     prof_dcts.append(prof_dct)
