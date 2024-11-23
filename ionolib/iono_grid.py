@@ -332,7 +332,7 @@ class iono_3d(object):
                 )
 
         if hasattr(self,'wave_list'):
-            _attrs['wave_list'] = self.wave_list
+            _attrs['wave_list'] = str(self.wave_list)
 
         _attrs.update(attrs)
 
