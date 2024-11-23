@@ -383,7 +383,7 @@ class RayTraceAndPlot(object):
         self.ray_path_data  = ray_path_data
         self.ray_path_state = ray_path_state
 
-    def find_receiver(self,tol_km = 50):
+    def find_receiver(self,spot_fname = None, tol_km = 50):
         """
         %     .ray_label             - label for each hop attempted which indicates
         %                              what the ray has done. 
@@ -412,7 +412,8 @@ class RayTraceAndPlot(object):
         self.srch_ray_path_state    = None
         self.srch_ray_data          = None
 
-        rx_range    = Re*geopack.greatCircleDist(prmd['origin_lat'],prmd['origin_lon'],prmd['rx_lat'],prmd['rx_lon'])
+        rx_range        = Re*geopack.greatCircleDist(prmd['origin_lat'],prmd['origin_lon'],prmd['rx_lat'],prmd['rx_lon'])
+        midLatLon       = geopack.midpoint(prmd['origin_lat'],prmd['origin_lon'],prmd['rx_lat'],prmd['rx_lon'])
 
         hop         = 0
         ray_dct     = []
@@ -440,6 +441,29 @@ class RayTraceAndPlot(object):
             self.srch_ray_path_data     = [self.ray_path_data[inx]]
             self.srch_ray_path_state    = [self.ray_path_state[inx]]
             self.srch_ray_data          = [self.ray_data[inx]]
+        
+        if spot_fname is not None:
+            #date,call_sign_tx,txlat,txlon,call_sign_rx,rxlat,rxlon,tfreq,sn,smode,ssrc,pthlen,latcen,loncen
+            #2018-12-15 00:00:00,N8MDP,41.3958,-81.2083,KN3A,40.0625,-76.4583,14075455.0,-18.0,'FT8',PSK,426.8,40.7535,-78.8095
+            spot                    = {}
+            spot['date']            = prmd['UT']
+            spot['call_sign_tx']    = prmd['tx_call']
+            spot['txlat']           = prmd['origin_lat']
+            spot['txlon']           = prmd['origin_lon']
+            spot['call_sign_rx']    = prmd['rx_call']
+            spot['rxlat']           = prmd['rx_lat']
+            spot['rxlon']           = prmd['rx_lon']
+            spot['tfreq']           = prmd['freqs'][0]
+            spot['sn']              = None
+            spot['smode']           = 'Raytrace'
+            spot['ssrc']            = 'Raytrace'
+            spot['pthlen']          = int(rx_range)
+            spot['latcen']          = midLatLon[0][0]
+            spot['loncen']          = midLatLon[1][0]
+
+            spot_df = pd.DataFrame([spot])
+            print(f'SPOT: {spot_fname}')
+            spot_df.to_csv(spot_fname,index=False)
 
     def plot_figure(self,fpath='output.png',figsize=(40,10),**kwargs):
         fig = plt.figure(figsize=figsize)
@@ -584,7 +608,9 @@ if __name__ == '__main__':
                 RTaP    = pickle.load(pkl)
             print(f'Using Cached File: {rtap_fpath}')
 
-        RTaP.find_receiver()
+        spot_fname   = bname + '.spot'
+        spot_fpath   = os.path.join(output_dir,spot_fname)
+        RTaP.find_receiver(spot_fname=spot_fpath)
         
         png_fname   = bname + '_raytrace.png'
         png_fpath   = os.path.join(output_dir,png_fname)
