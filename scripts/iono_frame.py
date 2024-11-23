@@ -115,16 +115,19 @@ iono = ionolib.iono_grid.iono_3d(**kw_args)
 
 print('Adding in TID...')
 advance_minutes = (time - time_0).total_seconds()/60.
-wave_list = []
+#wave_list = []
 #wave_list.append(dict(src_lat=40.679917,src_lon=-105.040944,amplitude=0.50,lambda_h=250,T_minutes=15))
 #wave_list.append(dict(src_lat=70.,src_lon= -70.,amplitude=0.50,lambda_h=300,T_minutes=15,advance_minutes=5))
-wave_list.append(dict(src_lat=60.,src_lon= 112.,amplitude=0.50,lambda_h=1000,T_minutes=120,advance_minutes=advance_minutes))
-iono.generate_wave(wave_list)
+#wave_list.append(dict(src_lat=60.,src_lon= 112.,amplitude=0.50,lambda_h=1000,T_minutes=120,advance_minutes=advance_minutes))
+
+wave_dct    = dict(src_lat=60.,src_lon= 112.,amplitude=0.50,lambda_h=1000,T_minutes=120,advance_minutes=advance_minutes)
+iono.generate_wave([wave_dct])
 
 print('Generating ionospheric profile along chosen path...')
 
 paths_fname = '20181215_14000-14350kHz_montePaths.csv'
 df_paths    = pd.read_csv(paths_fname,comment='#')
+
 
 prof_dcts   = []
 for rinx, row in df_paths.iterrows():
@@ -138,6 +141,16 @@ for rinx, row in df_paths.iterrows():
     prof_dct['range_step']  = 10.
     prof_dct['max_range']   = 3000.
     prof_dct['interp_type'] = 'nearest'
+
+    attrs                   = {}
+    attrs['engine']         = engine
+    attrs['tx_rx_pthlen']   = row['pthlen']
+    attrs['tx_rx_latcen']   = row['latcen']
+    attrs['tx_rx_loncen']   = row['loncen']
+    attrs['tx_rx_azm']      = row['azm']
+    attrs['message']        = f'Wave: {wave_dct}'
+
+    prof_dct['attrs']       = attrs
     prof_dcts.append(prof_dct)
 
 for prof_dct in prof_dcts:
