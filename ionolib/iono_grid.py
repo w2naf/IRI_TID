@@ -362,8 +362,8 @@ class iono_3d(object):
             dates       = list(map(pd.to_datetime,profl['date'].values))
             fname_base  = profl.attrs['fname_base']
 
-            dminS = min(dates).strftime('%Y%d%m.%H%M')
-            dmaxS = max(dates).strftime('%Y%d%m.%H%M')
+            dminS = min(dates).strftime('%Y%m%d.%H%M')
+            dmaxS = max(dates).strftime('%Y%m%d.%H%M')
 
             profl_dir = os.path.join(output_dir,fname_base)
             if not os.path.exists(profl_dir):
