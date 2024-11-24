@@ -369,7 +369,7 @@ class RayTraceAndPlot(object):
         prmd['rx_lon']  = iono_ds.attrs.get('rx_lon')
         prmd['rx_call'] = iono_ds.attrs.get('rx_call')
         if prmd['rx_lat'] is not None:
-            prmd['rx_range']    = Re*geopack.greatCircleDist(prmd['tx_lat'],prmd['tx_lon'],prmd['rx_lat'],prmd['rx_lon'])
+            prmd['rx_range']    = Re*geopack.greatCircleDist(prmd['origin_lat'],prmd['origin_lon'],prmd['rx_lat'],prmd['rx_lon'])
 
         self.ray_trace()
 
@@ -581,37 +581,44 @@ class RayTraceAndPlot(object):
         return result
 
 if __name__ == '__main__':
-    iono_nc_dir     = os.path.join('test_PyIRI','profiles')
-    iono_ncs        = glob.glob(os.path.join(iono_nc_dir,'*.nc'))
+    engine          = 'iri2016'
 
-    output_dir      = os.path.join('test_PyIRI','raytrace')
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    profiles_dir    = os.path.join('output',engine,'profiles')
+    raytrace_dir    = os.path.join('output',engine,'raytrace')
 
-    cache_dir      = os.path.join('test_PyIRI','RTaP_cache')
-    if not os.path.exists(cache_dir):
-        os.makedirs(cache_dir)
+    iono_nc_dirs    = glob.glob(os.path.join(profiles_dir,'*_'+engine))
+    iono_nc_dirs.sort()
 
-    for iono_nc in iono_ncs:    
-        # iono_nc         = '20181512.1200-20181512.1200_WW9S_W7VSX_PyIRI_profile.nc'
-        bname       = os.path.basename(iono_nc).replace('.nc','')
-        rtap_fname  = bname + '.rtap.pkl'
-        rtap_fpath  = os.path.join(cache_dir,rtap_fname)
-        
-        if not os.path.exists(rtap_fpath):
-            RTaP        = RayTraceAndPlot(iono_nc)
-            with open(rtap_fpath,'wb') as pkl:
-                pickle.dump(RTaP,pkl)
-            print(f'Wrote Cached File: {rtap_fpath}')
-        else:
-            with open(rtap_fpath,'rb') as pkl:
-                RTaP    = pickle.load(pkl)
-            print(f'Using Cached File: {rtap_fpath}')
+    iono_nc_dirs    = iono_nc_dirs[:1]
 
-        spot_fname   = bname + '.spot'
-        spot_fpath   = os.path.join(output_dir,spot_fname)
-        RTaP.find_receiver(spot_fname=spot_fpath)
-        
-        png_fname   = bname + '_raytrace.png'
-        png_fpath   = os.path.join(output_dir,png_fname)
-        RTaP.plot_figure(fpath=png_fpath)
+    for iono_nc_dir in iono_nc_dirs:
+        output_dir  = os.path.join(raytrace_dir,os.path.basename(iono_nc_dir))
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        iono_ncs        = glob.glob(os.path.join(iono_nc_dir,'*.nc'))
+        iono_ncs.sort()
+
+        for iono_nc in iono_ncs:    
+            # iono_nc         = '20181512.1200-20181512.1200_WW9S_W7VSX_PyIRI_profile.nc'
+            bname       = os.path.basename(iono_nc).replace('.nc','')
+            rtap_fname  = bname + '.rtap.pkl'
+            rtap_fpath  = os.path.join(output_dir,rtap_fname)
+            
+            if not os.path.exists(rtap_fpath):
+                RTaP        = RayTraceAndPlot(iono_nc)
+                with open(rtap_fpath,'wb') as pkl:
+                    pickle.dump(RTaP,pkl)
+                print(f'Wrote Cached File: {rtap_fpath}')
+            else:
+                with open(rtap_fpath,'rb') as pkl:
+                    RTaP    = pickle.load(pkl)
+                print(f'Using Cached File: {rtap_fpath}')
+
+            spot_fname   = bname + '.spot'
+            spot_fpath   = os.path.join(output_dir,spot_fname)
+            RTaP.find_receiver(spot_fname=spot_fpath)
+            
+            png_fname   = bname + '_raytrace.png'
+            png_fpath   = os.path.join(output_dir,png_fname)
+            RTaP.plot_figure(fpath=png_fpath)
