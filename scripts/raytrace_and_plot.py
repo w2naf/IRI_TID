@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import glob
+import shutil
 
 import pickle
 
@@ -364,6 +365,7 @@ class RayTraceAndPlot(object):
         prmd['nhops']          = nhops                                            # number of hops to raytrace
         prmd['irregs_flag']    = 0                                                # no irregularities - not interested in Doppler spread or field aligned irregularities
 
+        prmd['engine']  = iono_ds.attrs.get('engine')
         prmd['tx_call'] = iono_ds.attrs.get('tx_call')
         prmd['rx_lat']  = iono_ds.attrs.get('rx_lat')
         prmd['rx_lon']  = iono_ds.attrs.get('rx_lon')
@@ -383,7 +385,7 @@ class RayTraceAndPlot(object):
         self.ray_path_data  = ray_path_data
         self.ray_path_state = ray_path_state
 
-    def find_receiver(self,spot_fname = None, tol_km = 50):
+    def find_receiver(self, tol_km = 50):
         """
         %     .ray_label             - label for each hop attempted which indicates
         %                              what the ray has done. 
@@ -430,6 +432,7 @@ class RayTraceAndPlot(object):
         tf      = ray_df['ray_label'] == 1
         if np.count_nonzero(tf) == 0:
             return
+
         gnd_df  = ray_df[tf]
 
         # Find ray closest to rx_range within tolerance
@@ -442,7 +445,6 @@ class RayTraceAndPlot(object):
             self.srch_ray_path_state    = [self.ray_path_state[inx]]
             self.srch_ray_data          = [self.ray_data[inx]]
         
-        if spot_fname is not None:
             #date,call_sign_tx,txlat,txlon,call_sign_rx,rxlat,rxlon,tfreq,sn,smode,ssrc,pthlen,latcen,loncen
             #2018-12-15 00:00:00,N8MDP,41.3958,-81.2083,KN3A,40.0625,-76.4583,14075455.0,-18.0,'FT8',PSK,426.8,40.7535,-78.8095
             spot                    = {}
@@ -456,14 +458,13 @@ class RayTraceAndPlot(object):
             spot['tfreq']           = prmd['freqs'][0]
             spot['sn']              = None
             spot['smode']           = 'Raytrace'
-            spot['ssrc']            = 'Raytrace'
+            spot['ssrc']            = prmd['engine']
             spot['pthlen']          = int(rx_range)
             spot['latcen']          = midLatLon[0][0]
             spot['loncen']          = midLatLon[1][0]
 
             spot_df = pd.DataFrame([spot])
-            print(f'SPOT: {spot_fname}')
-            spot_df.to_csv(spot_fname,index=False)
+            return spot_df
 
     def plot_figure(self,fpath='output.png',figsize=(40,10),**kwargs):
         fig = plt.figure(figsize=figsize)
@@ -580,30 +581,36 @@ class RayTraceAndPlot(object):
         result['cbax']  = cbax
         return result
 
-if __name__ == '__main__':
-    engine          = 'iri2016'
-
-    profiles_dir    = os.path.join('output',engine,'profiles')
-    raytrace_dir    = os.path.join('output',engine,'raytrace')
-
-    iono_nc_dirs    = glob.glob(os.path.join(profiles_dir,'*_'+engine))
-    iono_nc_dirs.sort()
-
-    iono_nc_dirs    = iono_nc_dirs[:1]
-
-    for iono_nc_dir in iono_nc_dirs:
+def raytrace_and_spot(iono_nc_dir):
+        print(f'raytrace_and_spot: {iono_nc_dir}')
         output_dir  = os.path.join(raytrace_dir,os.path.basename(iono_nc_dir))
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
+        cache_dir  = os.path.join(raytrace_cache_dir,os.path.basename(iono_nc_dir))
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
+
+        spot_fname          = os.path.basename(iono_nc_dir) + '.spot.csv'
+        spot_final_fpath    = os.path.join(spot_dir,spot_fname)
+        if os.path.exists(spot_final_fpath):
+            print(f'Final Spot File Exists: {spot_final_fpath} ... Skipping Raytracing!')
+            return
+
+        spot_fpath          = os.path.join(output_dir,spot_fname)
+        with open(spot_fpath,'w') as sfl:
+            print(spot_fpath)
+            pass
+
         iono_ncs        = glob.glob(os.path.join(iono_nc_dir,'*.nc'))
         iono_ncs.sort()
 
+        spot_header = True  # Flips to False after first spot written.
         for iono_nc in iono_ncs:    
             # iono_nc         = '20181512.1200-20181512.1200_WW9S_W7VSX_PyIRI_profile.nc'
             bname       = os.path.basename(iono_nc).replace('.nc','')
             rtap_fname  = bname + '.rtap.pkl'
-            rtap_fpath  = os.path.join(output_dir,rtap_fname)
+            rtap_fpath  = os.path.join(cache_dir,rtap_fname)
             
             if not os.path.exists(rtap_fpath):
                 RTaP        = RayTraceAndPlot(iono_nc)
@@ -615,10 +622,33 @@ if __name__ == '__main__':
                     RTaP    = pickle.load(pkl)
                 print(f'Using Cached File: {rtap_fpath}')
 
-            spot_fname   = bname + '.spot'
-            spot_fpath   = os.path.join(output_dir,spot_fname)
-            RTaP.find_receiver(spot_fname=spot_fpath)
+            spot_df     = RTaP.find_receiver()
+            if spot_df is not None:
+                with open(spot_fpath,'a') as sfl:
+                    spot_df.to_csv(sfl,index=False,header=spot_header)
+                spot_header = False
             
             png_fname   = bname + '_raytrace.png'
             png_fpath   = os.path.join(output_dir,png_fname)
             RTaP.plot_figure(fpath=png_fpath)
+
+        shutil.copyfile(spot_fpath,spot_final_fpath)
+
+if __name__ == '__main__':
+    engine          = 'iri2016'
+
+    profiles_dir        = os.path.join('output',engine,'profiles')
+    raytrace_dir        = os.path.join('output',engine,'raytrace')
+    raytrace_cache_dir  = os.path.join('output',engine,'raytrace_cache')
+
+    spot_dir            = os.path.join('output',engine,'spots')
+    if not os.path.exists(spot_dir):
+        os.makedirs(spot_dir)
+
+    iono_nc_dirs    = glob.glob(os.path.join(profiles_dir,'*_'+engine))
+    iono_nc_dirs.sort()
+
+    iono_nc_dirs    = iono_nc_dirs[:1]
+
+    for iono_nc_dir in iono_nc_dirs:
+        raytrace_and_spot(iono_nc_dir)
