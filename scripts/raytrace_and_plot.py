@@ -614,15 +614,17 @@ def raytrace_and_spot(iono_nc_dir):
             rtap_fname  = bname + '.rtap.pkl'
             rtap_fpath  = os.path.join(cache_dir,rtap_fname)
             
-            if not os.path.exists(rtap_fpath):
-                RTaP        = RayTraceAndPlot(iono_nc)
-                with open(rtap_fpath,'wb') as pkl:
-                    pickle.dump(RTaP,pkl)
-                print(f'Wrote Cached File: {rtap_fpath}')
-            else:
-                with open(rtap_fpath,'rb') as pkl:
-                    RTaP    = pickle.load(pkl)
-                print(f'Using Cached File: {rtap_fpath}')
+            RTaP        = RayTraceAndPlot(iono_nc)
+
+#            if not os.path.exists(rtap_fpath):
+#                RTaP        = RayTraceAndPlot(iono_nc)
+#                with open(rtap_fpath,'wb') as pkl:
+#                    pickle.dump(RTaP,pkl)
+#                print(f'Wrote Cached File: {rtap_fpath}')
+#            else:
+#                with open(rtap_fpath,'rb') as pkl:
+#                    RTaP    = pickle.load(pkl)
+#                print(f'Using Cached File: {rtap_fpath}')
 
             spot_df     = RTaP.find_receiver()
             if spot_df is not None:
@@ -651,8 +653,6 @@ if __name__ == '__main__':
 
     iono_nc_dirs    = glob.glob(os.path.join(profiles_dir,'*_'+engine))
     iono_nc_dirs.sort()
-
-    iono_nc_dirs    = iono_nc_dirs[:30]
 
     if not multiproc:
         for iono_nc_dir in iono_nc_dirs:
