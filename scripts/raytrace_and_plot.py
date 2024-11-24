@@ -12,6 +12,8 @@ import shutil
 
 import pickle
 
+from multiprocessing import Pool
+
 import matplotlib
 mpl = matplotlib
 matplotlib.use('Agg')
@@ -635,6 +637,8 @@ def raytrace_and_spot(iono_nc_dir):
         shutil.copyfile(spot_fpath,spot_final_fpath)
 
 if __name__ == '__main__':
+    multiproc       = True
+    nprocs          = 30
     engine          = 'iri2016'
 
     profiles_dir        = os.path.join('output',engine,'profiles')
@@ -648,7 +652,11 @@ if __name__ == '__main__':
     iono_nc_dirs    = glob.glob(os.path.join(profiles_dir,'*_'+engine))
     iono_nc_dirs.sort()
 
-    iono_nc_dirs    = iono_nc_dirs[:1]
+    iono_nc_dirs    = iono_nc_dirs[:30]
 
-    for iono_nc_dir in iono_nc_dirs:
-        raytrace_and_spot(iono_nc_dir)
+    if not multiproc:
+        for iono_nc_dir in iono_nc_dirs:
+            raytrace_and_spot(iono_nc_dir)
+    else:
+        with Pool(nprocs) as pl:
+            pl.map(raytrace_and_spot,iono_nc_dirs)
