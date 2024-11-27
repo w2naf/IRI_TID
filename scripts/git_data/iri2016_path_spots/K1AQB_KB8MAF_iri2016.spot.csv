@@ -1,0 +1,2 @@
+date,call_sign_tx,txlat,txlon,call_sign_rx,rxlat,rxlon,tfreq,sn,smode,ssrc,pthlen,latcen,loncen
+2018-12-15 21:50:00,K1AQB,39.6562,-119.9054,KB8MAF,41.1313,-84.5792,14.0,,Raytrace,iri2016,2975,41.76391961561387,-102.4421466962196

@@ -1,0 +1,3 @@
+date,call_sign_tx,txlat,txlon,call_sign_rx,rxlat,rxlon,tfreq,sn,smode,ssrc,pthlen,latcen,loncen
+2018-12-15 18:00:00,W9DUJ,43.2896,-87.9792,KC2DPF,38.3542,-77.0417,14.0,,Raytrace,iri2016,1070,40.95106832357134,-82.3062378254366
+2018-12-15 18:10:00,W9DUJ,43.2896,-87.9792,KC2DPF,38.3542,-77.0417,14.0,,Raytrace,iri2016,1070,40.95106832357134,-82.3062378254366

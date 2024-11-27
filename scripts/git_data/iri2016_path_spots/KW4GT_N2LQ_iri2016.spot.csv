@@ -1,0 +1,2 @@
+date,call_sign_tx,txlat,txlon,call_sign_rx,rxlat,rxlon,tfreq,sn,smode,ssrc,pthlen,latcen,loncen
+2018-12-15 18:40:00,KW4GT,34.5,-85.0,N2LQ,42.1188,-77.9375,14.0,,Raytrace,iri2016,1046,38.3622305912689,-81.65473987173397

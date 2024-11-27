@@ -1,0 +1,2 @@
+date,call_sign_tx,txlat,txlon,call_sign_rx,rxlat,rxlon,tfreq,sn,smode,ssrc,pthlen,latcen,loncen
+2018-12-15 20:00:00,N7HTS,41.14,-104.79,VA5DAK,52.1729,-106.6292,14.0,,Raytrace,iri2016,1234,46.660095302913504,-105.61548840505776

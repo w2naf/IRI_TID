@@ -1,0 +1,2 @@
+date,call_sign_tx,txlat,txlon,call_sign_rx,rxlat,rxlon,tfreq,sn,smode,ssrc,pthlen,latcen,loncen
+2018-12-16,W6GE,34.1875,-118.5417,KA1JY,36.3542,-85.875,14.0,,Raytrace,iri2016,2961,36.39077620907733,-102.43292039269545

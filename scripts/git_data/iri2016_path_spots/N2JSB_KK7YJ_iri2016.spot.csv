@@ -1,0 +1,3 @@
+date,call_sign_tx,txlat,txlon,call_sign_rx,rxlat,rxlon,tfreq,sn,smode,ssrc,pthlen,latcen,loncen
+2018-12-15 21:10:00,N2JSB,30.5021,-87.3708,KK7YJ,46.5,-115.0,14.0,,Raytrace,iri2016,2965,39.3124031391777,-99.61095632155883
+2018-12-15 22:40:00,N2JSB,30.5021,-87.3708,KK7YJ,46.5,-115.0,14.0,,Raytrace,iri2016,2965,39.3124031391777,-99.61095632155883
