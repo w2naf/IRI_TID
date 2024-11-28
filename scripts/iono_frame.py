@@ -118,8 +118,8 @@ advance_minutes = (time - time_0).total_seconds()/60.
 wave_list = []
 #wave_list.append(dict(src_lat=40.679917,src_lon=-105.040944,amplitude=0.50,lambda_h=250,T_minutes=15))
 #wave_list.append(dict(src_lat=70.,src_lon= -70.,amplitude=0.50,lambda_h=300,T_minutes=15,advance_minutes=5))
-wave_list.append(dict(src_lat=60.,src_lon= 112.,amplitude=0.50,lambda_h=1000,T_minutes=120,advance_minutes=advance_minutes))
-
+#wave_list.append(dict(src_lat=60.,src_lon= 112.,amplitude=0.50,lambda_h=1000,T_minutes=120,advance_minutes=advance_minutes))
+wave_list.append(dict(src_lat=78.,src_lon= -75.,amplitude=25,lambda_h=1000,T_minutes=120,advance_minutes=advance_minutes))
 iono.generate_wave(wave_list)
 
 print('Generating ionospheric profile along chosen path...')
@@ -150,6 +150,8 @@ for rinx, row in df_paths.iterrows():
 
     prof_dct['attrs']       = attrs
     prof_dcts.append(prof_dct)
+
+#prof_dcts = prof_dcts[:1]
 
 for prof_dct in prof_dcts:
     print(f'{datetime.datetime.now()}: iono.generate_tx_rx_profile({prof_dct})')
