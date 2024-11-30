@@ -8,8 +8,8 @@ import pandas as pd
 import numpy as np
 
 engine      = 'iri2016'
-base_dir    = 'git_data'
-input_dir   = os.path.join(base_dir,f'{engine}_path_spots')
+base_dir    = os.path.join('output',engine)
+input_dir   = os.path.join(base_dir,'spots')
 
 spot_csvs   = glob.glob(os.path.join(input_dir,'*.spot.csv'))
 spot_csvs.sort()
