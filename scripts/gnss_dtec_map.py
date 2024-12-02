@@ -210,7 +210,7 @@ class GNSSdTECMap(object):
 
         vmin    = -0.200
         vmax    =  0.200
-        cntr    = map_data.plot.contourf(x=lon_key,y=lat_key,ax=ax,levels=30,cmap=mpl.cm.jet,vmin=vmin,vmax=vmax)
+        cntr    = map_data.plot.contourf(x=lon_key,y=lat_key,ax=ax,levels=30,cmap=mpl.cm.jet,vmin=vmin,vmax=vmax,cbar_kwargs=dict(shrink=0.65,pad=0.075))
 #        cntr    = map_data.plot.pcolormesh(x=lon_key,y=lat_key,ax=ax,cmap=mpl.cm.jet,vmin=vmin,vmax=vmax)
         cax     = cntr.colorbar.ax
         cax.set_ylabel(map_data.name)
